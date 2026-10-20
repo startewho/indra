@@ -15,7 +15,7 @@ namespace IndraOcr.Pipeline;
 /// order and markdown (S3) are in <see cref="Assembly"/>; the PDF text layer is
 /// the Converter's job (S4).
 /// </summary>
-public sealed class OrtOcr : IDisposable
+public sealed partial class OrtOcr : IDisposable
 {
     public const float MinConf = 0.5f;
     public const double RouteSure = 0.95;
@@ -32,7 +32,8 @@ public sealed class OrtOcr : IDisposable
 
     private readonly record struct LmConfig(NgramLm Lm, double Alpha, double Beta, double Gate);
 
-    public OrtOcr(string modelDir, int threads = 4, bool adaptive = true, string[]? providers = null)
+    public OrtOcr(string modelDir, int threads = 4, bool adaptive = true, string[]? providers = null,
+        bool tableHeads = false, bool furniture = false)
     {
         var so = OrtUtil.Options(threads);
         _owned.Add(so);
@@ -82,6 +83,8 @@ public sealed class OrtOcr : IDisposable
         Height = ModelMeta.RecHeight;
         Window = ModelMeta.RecWindow;
         Adaptive = adaptive;
+        TableHeads = tableHeads;
+        Furniture = furniture;
     }
 
     public MetaType ModelMeta { get; }
@@ -98,6 +101,8 @@ public sealed class OrtOcr : IDisposable
     public int Height { get; }
     public int Window { get; }
     public bool Adaptive { get; }
+    public bool TableHeads { get; }
+    public bool Furniture { get; }
 
     private InferenceSession Load(string path, SessionOptions so)
     {
@@ -248,7 +253,7 @@ public sealed class OrtOcr : IDisposable
     /// comes back with no text.  Tokens are recognizer ids for base lines and
     /// characters for group recognizers.
     /// </summary>
-    public RecLine[] Recognize(Mat gray, float[] boxes, int batch = 64)
+    public RecLine[] Recognize(Mat gray, float[] boxes, int batch = 64, bool vertical = false)
     {
         int n = boxes.Length / 5;
         var boxList = new List<float[]>(n);
@@ -276,7 +281,12 @@ public sealed class OrtOcr : IDisposable
 
         var groups = new List<(InferenceSession Session, Vocab.Vocab Vocab, List<int> Sel, bool AsChars)>();
         var baseSel = Enumerable.Range(0, n).ToList();
-        if (Script is not null && crops.Count > 0)
+        if (vertical && Groups.TryGetValue("cjk", out var cjk))
+        {
+            // A vertical page's lines are CJK columns, characters on their side.
+            groups.Add((cjk.Session, cjk.Vocab, Enumerable.Range(0, n).ToList(), true));
+        }
+        else if (Script is not null && crops.Count > 0)
         {
             var (names, sure) = LineGroups(crops);
             baseSel = Enumerable.Range(0, n).Where(j => names[j] == "base" || !sure[j]).ToList();

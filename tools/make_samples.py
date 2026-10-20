@@ -129,6 +129,18 @@ def cjk() -> Image.Image:
     return img
 
 
+def vertical() -> Image.Image:
+    """A CJK page turned a quarter turn clockwise: the orient model may call it
+    vertical (class 4) or a quarter turn (class 3); either way the pipeline should
+    read it back."""
+    return cjk().rotate(-90, expand=True, fillcolor=255)
+
+
+def skewed() -> Image.Image:
+    """Seven degrees off level, to exercise the deskew search."""
+    return english().rotate(7, expand=True, fillcolor=255)
+
+
 def main(argv=None) -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     pages = {
@@ -138,6 +150,8 @@ def main(argv=None) -> int:
         "tiny.png": tiny(),
         "rtl.png": rtl(),
         "cjk.png": cjk(),
+        "vertical.png": vertical(),
+        "skewed.png": skewed(),
     }
     for name, img in pages.items():
         p = OUT / name

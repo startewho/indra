@@ -202,10 +202,10 @@ $env:HF_HUB_DISABLE_XET = "1"
 |---|---|---|---|---:|
 | **S0 准备** ✅ | 建 Python 参考环境（装依赖、下载 76MB 模型）；建 C# solution；写黄金数据生成器与比对器 | `tools/dump_golden.py` + `compare_golden.py`；`dotnet/` 骨架；2 页黄金数据 | 同页两次运行结果一致；比对器自检通过；`dotnet build` 通过 | 1–2 |
 | **S1 基础设施** ✅ | `Np`（argsort/searchsorted/bincount/percentile/logaddexp/cumsum/median/triu/matmul）、Unicode 表生成器、`NpzReader`、ONNX 会话封装、图像 IO（PNG/JPEG/TIFF 多帧） | `Numerics/`、`Imaging/`、`Models/`；Unicode 表；`tools/gen_unicode_tables.py` | 每个 helper 有 numpy 基准用例，浮点误差 ≤1e-6 | 2–3 |
-| **S2 检测+识别** ✅ | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别；**LM beam search 提前到本阶段**（默认模型必用） | `OrtOcr.Detect/Recognize`、`NgramLm`、`BeamSearch` | 8 页样本（含暗底/旋转/竖排查询/微小字/中英阿希）：box ≤0.5px，文本/ids/路由 100% 一致，裁剪逐字节相同 | 3–4 |
-| **S3 版面+输出** | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON | `Page` 全字段 + Markdown | Markdown 文本 100% 一致；lines 顺序一致；blocks/bbox 一致 | 3–4 |
+| **S2 检测+识别** ✅ | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别；**LM beam search 提前到本阶段**（默认模型必用） | `OrtOcr.Detect/Recognize`、`NgramLm`、`BeamSearch` | 10 页样本（暗底/90°/270°/7°/微小字/中英阿希）：box ≤0.5px，文本/ids/路由 100% 一致，裁剪逐字节相同 | 3–4 |
+| **S3 版面+输出** ✅ | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON、倾斜/转向 | `Page` 全字段 + Markdown；`OrtOcr.Read` | 10 页整页对齐：Markdown/lines/blocks/rotation/skew 100% 一致 | 3–4 |
 | **S4 PDF** | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式 | `Converter.Convert` | 数字版 PDF 的 `source/note/rotation/skew/vertical` 与文本全部一致 | 4–6 |
-| **S5 可选模型** | `lm`（npz + beam search）、`script` 分流、`math` 自回归解码、`orient` | 全语言/数学能力 | 与参考端同页同结果；LM 路径有专项用例 | 3–5 |
+| **S5 可选模型** | `math` 自回归解码（`lm`/`script`/`orient` 已在 S2/S3 完成） | 数学能力 | 含数学页与参考端同结果 | 2–4 |
 | **S6 CLI+并行** | 参数、退出码、`--out` 命名规则、多核调度、错误页 | `indra-ocr` 等价 CLI | 现有 CLI 测试全绿 | 2–3 |
 | **S7 Viewer** | Minimal API + 原 HTML/JS（`viewer.py` 的 `PAGE` 原样复用） | 本地查看器 | 与现有 viewer 功能对齐 | 2–3 |
 | **S8 收尾** | 跨平台原生库、NuGet 打包、文档、性能基线 | 可发布的包 | 见 §4 验收 | 2–4 |
@@ -223,7 +223,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
 
-### 3.2 进展记录（S1–S2 已完成，2026-10-20）
+### 3.2 进展记录（S1–S3 已完成，2026-10-20）
 
 **S1 基础设施**（`dotnet/src/IndraOcr/`）：
 
@@ -248,19 +248,36 @@ $env:HF_HUB_DISABLE_XET = "1"
 | `Pipeline/OrtOcr.cs` | `pipeline.py` 检测/识别 | 含自适应二次检测、script 分流、高置信度竞争 |
 | `Lm/NgramLm.cs` + `Lm/BeamSearch.cs` | `lm.py` | logp 与 beam 的 ids/steps 完全一致（提前完成，属 S5） |
 
-**语料与结果**：8 页（扫描韩文信、公式页、英文版式、暗底反白、90° 旋转、微小字、阿拉伯/希伯来、中文）。
-`dotnet test` **32 passed**：
+**语料与结果**：10 页（扫描韩文信、公式页、英文版式、暗底反白、90° 旋转、270° 旋转、微小字、阿拉伯/希伯来、中文、7° 倾斜）。
+`dotnet test` **36 passed**：
 
 - 检测：输入/输出张量与 Python ≤1e-6，框 ≤0.5px（实测 ≤0.001px）
 - 识别：文本、置信度、ids、分组、dark 标记 100% 一致；裁剪图 SHA-256 相同
 - LM：10 个 logp 探针与 1 条 beam 用例完全一致
+- 整页（S3）：`rotation`/`skew`/`vertical`/`note`、逐行文本/框/置信度、blocks、Markdown **全部一致**
+
+**S3 版面+输出**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `Rtl/Bidi.cs` | `rtl.py` | 7 组双向文本用例（自动/RTL/LTR、括号镜像） |
+| `Ordering/OrderPost.cs` | `order_post.py` | 线特征、XY-cut、`decode_order`、平均链接聚类、块级排序 |
+| `Layout/LayoutPost.cs` | `layout_post.py` | `join_lines`、表头/几何两种表格、`page_blocks`、`page_markdown` |
+| `Pipeline/Assembly.cs` | `pipeline.tidy_lines/split_line/gutter_cuts` | 端到端覆盖 |
+| `Pipeline/Skew.cs` | 倾斜估计、转向、`orient_input`、`unrotate_box` | 7° 页与 90°/270° 页覆盖 |
+| `Pipeline/OrtOcr.Assembly.cs` | `reading_order`/`assemble`/`__call__` | 整页 10/10 对齐 |
+| `Pipeline/Page.cs` | `Page`/`Line` | 全字段 |
+
+纯函数另有 `tools/dump_stage_fixtures.py` 产出的 JSON 夹具（bidi、17 行版面的特征/XY-cut/聚类/排序、`join_lines`、`table_html`），3 个测试逐项对齐。
 
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
-- `det.onnx` 的图片通道（合成样本未触发图片区）
-- `orient.onnx` 转向、倾斜矫正、`order/layout` 与 Markdown（S3/S5）
+- `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
+- 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
+- `table_heads=True` 的表头路径（Python 的公开 `load()` 未暴露该开关）
 - `math` 自回归解码、PDF 文字层（S4/S5）
+
 
 
 ---
@@ -290,7 +307,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 ### 4.3 语料
 
 - `examples/samples/*.png`（扫描件、公式）
-- 由现有测试生成的合成 PDF（旋转页、双栏、RTL、竖排、表格、图片区）
+- `tools/make_samples.py` 生成的合成页（英文版式、暗底、90°/270°、7° 倾斜、微小字、RTL、CJK）与测试生成的 PDF
 - 多语言页面：拉丁/中文/日文/韩文/阿拉伯/希伯来/天城文/泰文各 ≥5 页
 - 退化样本：暗底浅字、45° 倾斜、超宽横幅、>100MP 大页
 - 若允许联网：OmniParseBench 子集（`bench/opb_indra.py` 同源页面）作为准确率回归（已确认可用）。
@@ -462,7 +479,7 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S2）
+## 9. 里程碑检查清单（S0–S3）
 
 S0 已完成：
 
@@ -490,6 +507,18 @@ S2 已完成：
 - [x] LM logp 与 beam search 与 Python 完全一致
 - [ ] `mask.onnx` CenterMask 路径（模型集无此文件，待有模型时验证）
 - [ ] `det.onnx` 图片通道（合成样本未触发，待真实图文页）
-- [ ] OmniParseBench 子集回归（S3 端到端跑通后）
+- [ ] OmniParseBench 子集回归（S3 端到端已跑通，待接入）
 
 
+
+S3 已完成：
+
+- [x] `rtl.flip` 7 组用例（自动方向、RTL/LTR、镜像括号）与 Python 一致
+- [x] `line_features`、`order_xycut`、`xycut_blocks`、`decode_order`、`_cluster` 与 Python 一致
+- [x] `join_lines`、`table_html`（几何表格）与 Python 一致
+- [x] 整页 10/10：`rotation`（含 90°/270°）、`skew`（7°）、`note`、lines、blocks、Markdown 全一致
+- [x] `tidy_lines`/`split_line`/`gutter_cuts`/表格单元格拆分由整页用例覆盖
+- [x] `orient.onnx` 转向与 `estimate_skew` 倾斜矫正接入
+- [ ] 真实竖排页（合成页被 orient 判为 270°，VERTICAL 分支待样本）
+- [ ] 图片区（`Picture` block / `![](picture-k)`）待真实图文页
+- [ ] `table_heads=True` 路径（公开 API 未暴露）

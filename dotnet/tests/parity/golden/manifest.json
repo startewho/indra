@@ -70,7 +70,15 @@
  },
  "inputs": [
   "examples\\samples\\scan.png",
-  "examples\\samples\\equations.png"
+  "examples\\samples\\equations.png",
+  "dotnet\\tests\\parity\\samples\\english.png",
+  "dotnet\\tests\\parity\\samples\\dark.png",
+  "dotnet\\tests\\parity\\samples\\rotated.png",
+  "dotnet\\tests\\parity\\samples\\tiny.png",
+  "dotnet\\tests\\parity\\samples\\rtl.png",
+  "dotnet\\tests\\parity\\samples\\cjk.png",
+  "dotnet\\tests\\parity\\samples\\vertical.png",
+  "dotnet\\tests\\parity\\samples\\skewed.png"
  ],
  "pages": {
   "scan-e7ab8f33": {
@@ -88,6 +96,78 @@
     {
      "index": 0,
      "record": "equations-4016eb22/page-0000.json"
+    }
+   ]
+  },
+  "english-9e7fdf26": {
+   "input": "dotnet\\tests\\parity\\samples\\english.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "english-9e7fdf26/page-0000.json"
+    }
+   ]
+  },
+  "dark-e87d8bc4": {
+   "input": "dotnet\\tests\\parity\\samples\\dark.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "dark-e87d8bc4/page-0000.json"
+    }
+   ]
+  },
+  "rotated-f1b0721a": {
+   "input": "dotnet\\tests\\parity\\samples\\rotated.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "rotated-f1b0721a/page-0000.json"
+    }
+   ]
+  },
+  "tiny-6e44e380": {
+   "input": "dotnet\\tests\\parity\\samples\\tiny.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "tiny-6e44e380/page-0000.json"
+    }
+   ]
+  },
+  "rtl-4d84e08c": {
+   "input": "dotnet\\tests\\parity\\samples\\rtl.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "rtl-4d84e08c/page-0000.json"
+    }
+   ]
+  },
+  "cjk-43edc180": {
+   "input": "dotnet\\tests\\parity\\samples\\cjk.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "cjk-43edc180/page-0000.json"
+    }
+   ]
+  },
+  "vertical-236c762d": {
+   "input": "dotnet\\tests\\parity\\samples\\vertical.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "vertical-236c762d/page-0000.json"
+    }
+   ]
+  },
+  "skewed-1328261a": {
+   "input": "dotnet\\tests\\parity\\samples\\skewed.png",
+   "pages": [
+    {
+     "index": 0,
+     "record": "skewed-1328261a/page-0000.json"
     }
    ]
   }

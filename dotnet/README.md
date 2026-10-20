@@ -12,7 +12,10 @@ dotnet/
     Imaging/               # OpenCV wrappers
     Models/                # model folder + Hugging Face download
     Vocab/                 # CTC vocabulary
-    Pipeline/              # Meta, DetPost, RecPreproc, LineMask, OrtOcr
+    Pipeline/              # Meta, DetPost, RecPreproc, LineMask, Skew, OrtOcr, Assembly
+    Ordering/              # line features, XY-cut, reading order, clustering
+    Layout/                # blocks, tables, markdown
+    Rtl/                   # Unicode bidi subset (flip)
     Lm/                    # n-gram LM + CTC beam search
   src/IndraOcr.Cli/        # indra-ocr equivalent (S6)
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent (S7)
@@ -59,10 +62,14 @@ Rules: text / reading order / markdown / `note` / `source` must match exactly;
 boxes within 0.5 px, confidences within 1e-4, detector tensors within 1e-6, line
 crops byte for byte.
 
-What the current tests cover (S1–S2): detector input/output/boxes, adaptive
+What the current tests cover (S1–S3): detector input/output/boxes, adaptive
 second pass, line crops (32 px and 96 px window), CTC output, script routing,
-confidence competition, LM log-probabilities and beam search. Reading order,
-layout, markdown, PDF and math are later stages.
+confidence competition, LM log-probabilities and beam search, page orientation
+and deskew, reading order, layout blocks and markdown.
+
+```shell
+python tools/dump_stage_fixtures.py    # bidi / order / layout pure functions
+```
 
 ## Native dependencies
 

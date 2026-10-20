@@ -1,0 +1,264 @@
+{
+ "file": "dotnet/tests/parity/samples/skewed.png",
+ "page": 0,
+ "source": "ocr",
+ "rotation": 0,
+ "skew": -7.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    78.0,
+    118.1,
+    680.9,
+    231.0
+   ],
+   "text": "Indra OCR port: parity check",
+   "conf": 0.9952
+  },
+  {
+   "box": [
+    86.9,
+    192.5,
+    697.3,
+    289.6
+   ],
+   "text": "This page exercises the detector and the Latin recognizer.",
+   "conf": 0.9911
+  },
+  {
+   "box": [
+    94.4,
+    228.7,
+    713.7,
+    326.9
+   ],
+   "text": "The quick brown fox jumps over the lazy dog, 0123456789.",
+   "conf": 0.9885
+  },
+  {
+   "box": [
+    96.2,
+    266.8,
+    718.2,
+    365.0
+   ],
+   "text": "A paragraph line that is long enough to be read as one line,",
+   "conf": 0.9895
+  },
+  {
+   "box": [
+    100.8,
+    318.7,
+    605.6,
+    402.4
+   ],
+   "text": "and a second one under it with the same shape.",
+   "conf": 0.984
+  },
+  {
+   "box": [
+    113.6,
+    413.8,
+    452.4,
+    473.2
+   ],
+   "text": "1. Numbered item with a marker",
+   "conf": 0.9644
+  },
+  {
+   "box": [
+    114.7,
+    415.8,
+    748.4,
+    515.3
+   ],
+   "text": "2. Another item with (parentheses) and symbols: $ % & @ #",
+   "conf": 0.9689
+  },
+  {
+   "box": [
+    124.9,
+    541.0,
+    357.5,
+    585.7
+   ],
+   "text": "Table-like cells below:",
+   "conf": 0.9973
+  },
+  {
+   "box": [
+    144.8,
+    624.0,
+    194.3,
+    643.0
+   ],
+   "text": "Name",
+   "conf": 0.9764
+  },
+  {
+   "box": [
+    402.8,
+    592.5,
+    452.2,
+    611.5
+   ],
+   "text": "Value",
+   "conf": 0.9935
+  },
+  {
+   "box": [
+    660.8,
+    562.4,
+    701.3,
+    579.8
+   ],
+   "text": "Note",
+   "conf": 0.9661
+  },
+  {
+   "box": [
+    151.7,
+    684.1,
+    199.4,
+    705.5
+   ],
+   "text": "alpha",
+   "conf": 0.9987
+  },
+  {
+   "box": [
+    410.1,
+    653.7,
+    447.8,
+    670.8
+   ],
+   "text": "12.5",
+   "conf": 0.9992
+  },
+  {
+   "box": [
+    668.1,
+    622.8,
+    699.8,
+    639.1
+   ],
+   "text": "first",
+   "conf": 0.9967
+  },
+  {
+   "box": [
+    156.6,
+    745.4,
+    197.2,
+    762.8
+   ],
+   "text": "beta",
+   "conf": 0.9976
+  },
+  {
+   "box": [
+    417.4,
+    715.8,
+    428.6,
+    729.5
+   ],
+   "text": "7",
+   "conf": 0.9988
+  },
+  {
+   "box": [
+    675.6,
+    679.5,
+    736.4,
+    699.1
+   ],
+   "text": "second",
+   "conf": 0.999
+  },
+  {
+   "box": [
+    227.8,
+    1362.2,
+    601.3,
+    1424.6
+   ],
+   "text": "Footnote: small print at the bottom of the page.",
+   "conf": 0.9819
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Section-Header",
+   "bbox": [
+    78.0,
+    118.1,
+    680.9,
+    231.0
+   ],
+   "text": "Indra OCR port: parity check"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    86.9,
+    191.0,
+    713.7,
+    327.2
+   ],
+   "text": "This page exercises the detector and the Latin recognizer.\nThe quick brown fox jumps over the lazy dog, 0123456789."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    96.2,
+    266.8,
+    722.8,
+    402.4
+   ],
+   "text": "A paragraph line that is long enough to be read as one line,\nand a second one under it with the same shape."
+  },
+  {
+   "label": "List-Group",
+   "bbox": [
+    110.1,
+    378.1,
+    748.4,
+    515.3
+   ],
+   "text": "1. Numbered item with a marker\n2. Another item with (parentheses) and symbols: $ % & @ #"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    124.9,
+    541.0,
+    357.5,
+    585.7
+   ],
+   "text": "Table-like cells below:"
+  },
+  {
+   "label": "Table",
+   "bbox": [
+    141.9,
+    559.2,
+    736.4,
+    762.8
+   ],
+   "text": "Name\nValue\nNote\nalpha\n12.5\nfirst\nbeta\n7\nsecond"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    227.8,
+    1362.2,
+    601.3,
+    1424.6
+   ],
+   "text": "Footnote: small print at the bottom of the page."
+  }
+ ],
+ "markdown": "## Indra OCR port: parity check\n\nThis page exercises the detector and the Latin recognizer. The quick brown fox jumps over the lazy dog, 0123456789.\n\nA paragraph line that is long enough to be read as one line, and a second one under it with the same shape.\n\n1. Numbered item with a marker\n2. Another item with (parentheses) and symbols: $ % & @ #\n\nTable-like cells below:\n\n<table>\n<tr><th>Name</th><th>Value</th><th>Note</th></tr>\n<tr><td>alpha</td><td>12.5</td><td>first</td></tr>\n<tr><td>beta</td><td>7</td><td>second</td></tr>\n</table>\n\nFootnote: small print at the bottom of the page."
+}
