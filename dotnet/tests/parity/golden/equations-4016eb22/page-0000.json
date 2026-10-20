@@ -1,0 +1,594 @@
+{
+ "file": "examples/samples/equations.png",
+ "page": 0,
+ "source": "ocr",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    275.7,
+    143.0,
+    1382.6,
+    162.7
+   ],
+   "text": "REDUCED SUPERSCHEMES AND THE COMBINATORICS OF TORIC SUPERVARIETIES",
+   "conf": 0.9934
+  },
+  {
+   "box": [
+    1421.9,
+    141.8,
+    1451.6,
+    164.6
+   ],
+   "text": "21",
+   "conf": 0.9998
+  },
+  {
+   "box": [
+    689.6,
+    208.8,
+    827.1,
+    240.7
+   ],
+   "text": "V_n=C_2",
+   "conf": 0.8408
+  },
+  {
+   "box": [
+    1044.7,
+    392.3,
+    1070.5,
+    432.6
+   ],
+   "text": "01",
+   "conf": 0.8254
+  },
+  {
+   "box": [
+    575.8,
+    548.2,
+    680.5,
+    577.3
+   ],
+   "text": "$V_{m}=0$",
+   "conf": 0.9852
+  },
+  {
+   "box": [
+    401.7,
+    628.0,
+    1252.0,
+    660.3
+   ],
+   "text": "FIGURE 3. The decorated fan of an action of Q(1)2 on P22",
+   "conf": 0.9722
+  },
+  {
+   "box": [
+    201.0,
+    717.5,
+    1452.7,
+    748.1
+   ],
+   "text": "Example 4.28. Let us use Proposition 4.26 and Corollary 4.27 to classify toric superva-",
+   "conf": 0.9873
+  },
+  {
+   "box": [
+    200.8,
+    756.2,
+    1457.5,
+    788.2
+   ],
+   "text": "rieties with supertorus Q(1){n and underlying variety Pn\\approx X_{3}$ for the complete fan whose",
+   "conf": 0.9653
+  },
+  {
+   "box": [
+    200.9,
+    795.8,
+    1101.1,
+    826.9
+   ],
+   "text": "rays are $_{i = R +x{i} for i = 1, ...,n and $p_{0} = R + (x_1 -. - x_n).",
+   "conf": 0.8912
+  },
+  {
+   "box": [
+    246.4,
+    833.2,
+    1453.0,
+    865.3
+   ],
+   "text": "For \\dot i =1, , n, the ray $\\rho_{i}$ must be decorated by a subspace $V_{m}$ such that [V_{jn},V_{j}]\\subseteq",
+   "conf": 0.9232
+  },
+  {
+   "box": [
+    200.7,
+    871.4,
+    1453.0,
+    903.6
+   ],
+   "text": "Cx_{i. Hence $V_{j}=C\\theta_{i}$ or 0. Likewise, unless $V_{m}=0, we have $V_{jm}=C\\left(\\theta_{1}+\\theta_{2}± ...+\\theta_{n})$",
+   "conf": 0.9009
+  },
+  {
+   "box": [
+    200.9,
+    908.7,
+    584.9,
+    940.0
+   ],
+   "text": "for some 2n-1 choices of ±.",
+   "conf": 0.8895
+  },
+  {
+   "box": [
+    246.5,
+    949.6,
+    1452.9,
+    981.4
+   ],
+   "text": "It is straightforward to verify that condition (b) of the definition of a large-orbit",
+   "conf": 0.9869
+  },
+  {
+   "box": [
+    196.4,
+    988.7,
+    1452.8,
+    1019.6
+   ],
+   "text": "decorated fan holds regardless of which subspaces are chosen. We therefore obtain a col-",
+   "conf": 0.9922
+  },
+  {
+   "box": [
+    200.9,
+    1026.7,
+    1452.9,
+    1058.2
+   ],
+   "text": "lection of 2n (1 + 2^n-1) toric supervarieties which are not equivariantly isomorphic. Many,",
+   "conf": 0.9454
+  },
+  {
+   "box": [
+    200.9,
+    1066.4,
+    1407.2,
+    1097.7
+   ],
+   "text": "however, are isomorphic via toric morphisms (to be defined in the following section).",
+   "conf": 0.9863
+  },
+  {
+   "box": [
+    246.6,
+    1104.2,
+    1452.9,
+    1135.5
+   ],
+   "text": "Notice that if all but one of these decorations is nonzero, then the decorated fan",
+   "conf": 0.9793
+  },
+  {
+   "box": [
+    196.1,
+    1142.5,
+    1457.6,
+    1175.2
+   ],
+   "text": "describes a supervariety isomorphic to projective superspace Pn}1n. For instance, if V{n =",
+   "conf": 0.9509
+  },
+  {
+   "box": [
+    200.8,
+    1181.6,
+    1452.9,
+    1213.2
+   ],
+   "text": "C\\theta_{i}$ and V_{m = 0, then the coordinate superalgebras of the affine charts can be written as",
+   "conf": 0.9506
+  },
+  {
+   "box": [
+    652.7,
+    1234.6,
+    996.5,
+    1269.2
+   ],
+   "text": "Ct., n. 151, , ton",
+   "conf": 0.7327
+  },
+  {
+   "box": [
+    197.5,
+    1296.1,
+    254.7,
+    1319.2
+   ],
+   "text": "and",
+   "conf": 0.9999
+  },
+  {
+   "box": [
+    514.7,
+    1329.4,
+    1129.9,
+    1369.9
+   ],
+   "text": "Ct 1, . . . . . . . . . . .",
+   "conf": 0.5142
+  },
+  {
+   "box": [
+    200.9,
+    1385.2,
+    1046.3,
+    1416.5
+   ],
+   "text": "Figure 3 depicts the corresponding decorated fan for $n = 2,",
+   "conf": 0.9781
+  },
+  {
+   "box": [
+    246.5,
+    1424.1,
+    1452.9,
+    1455.6
+   ],
+   "text": "If instead we change the decoration of $\\rho_{0}$ to $\\theta_{1}+ ... +\\theta_{n}, then the resulting affine",
+   "conf": 0.9523
+  },
+  {
+   "box": [
+    200.9,
+    1463.7,
+    726.4,
+    1494.6
+   ],
+   "text": "charts have coordinate superalgebras",
+   "conf": 0.9995
+  },
+  {
+   "box": [
+    197.4,
+    1576.2,
+    254.9,
+    1600.3
+   ],
+   "text": "and",
+   "conf": 0.9999
+  },
+  {
+   "box": [
+    656.7,
+    1513.3,
+    992.5,
+    1551.7
+   ],
+   "text": "Ct., n. 151., tan",
+   "conf": 0.7193
+  },
+  {
+   "box": [
+    226.1,
+    1619.0,
+    1423.0,
+    1664.6
+   ],
+   "text": "",
+   "conf": 0.413
+  },
+  {
+   "box": [
+    200.7,
+    1687.1,
+    1453.0,
+    1719.6
+   ],
+   "text": "so the supervariety is decidedly not isomorphic to projective superspace. Figure 4(B)",
+   "conf": 0.9843
+  },
+  {
+   "box": [
+    196.4,
+    1725.8,
+    863.4,
+    1756.4
+   ],
+   "text": "depicts corresponding decorated fan for $n = 1.",
+   "conf": 0.9871
+  },
+  {
+   "box": [
+    246.2,
+    1785.7,
+    1453.2,
+    1819.5
+   ],
+   "text": "In general, when $T = Q(1)n, there are finitely many possible decorations for each",
+   "conf": 0.9785
+  },
+  {
+   "box": [
+    200.4,
+    1823.1,
+    1453.3,
+    1857.3
+   ],
+   "text": "ray. Namely, for $\\rho = R{+}(a1}x_1 + ... + a_{n}x_{n}), there are 2^d}{-1} many possible “square root",
+   "conf": 0.901
+  },
+  {
+   "box": [
+    195.9,
+    1861.6,
+    1457.9,
+    1895.7
+   ],
+   "text": "subspaces” C({a101±. + {an_n}), where d is the number of indices i = 1, ...,n for which",
+   "conf": 0.893
+  },
+  {
+   "box": [
+    196.5,
+    1903.5,
+    296.9,
+    1933.4
+   ],
+   "text": "a_{i}\\neq0.",
+   "conf": 0.9082
+  },
+  {
+   "box": [
+    246.6,
+    1941.3,
+    1457.4,
+    1972.3
+   ],
+   "text": "The prior example admitted no issues of compatibility between different rays of the",
+   "conf": 0.9891
+  },
+  {
+   "box": [
+    200.8,
+    1979.5,
+    1453.0,
+    2011.6
+   ],
+   "text": "same cone. This is not ordinarily the case; if $\\rho_{1}= R_{+}(a_{1x_1+ ... + a_{n}x_{n}$ and $\\rho_{2}=",
+   "conf": 0.9098
+  },
+  {
+   "box": [
+    200.8,
+    2017.6,
+    1457.5,
+    2049.6
+   ],
+   "text": "R{+ (b1}x_{1+ ... + b_n}x_{n}), compatibility is less common if the linear matroid on the n vectors",
+   "conf": 0.9336
+  },
+  {
+   "box": [
+    709.8,
+    2063.7,
+    948.5,
+    2143.7
+   ],
+   "text": "(2) (h)",
+   "conf": 0.8049
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Page-Header",
+   "bbox": [
+    275.7,
+    143.0,
+    1382.6,
+    162.7
+   ],
+   "text": "REDUCED SUPERSCHEMES AND THE COMBINATORICS OF TORIC SUPERVARIETIES"
+  },
+  {
+   "label": "Page-Header",
+   "bbox": [
+    1421.9,
+    141.8,
+    1451.6,
+    164.6
+   ],
+   "text": "21"
+  },
+  {
+   "label": "Section-Header",
+   "bbox": [
+    689.6,
+    208.8,
+    827.1,
+    240.7
+   ],
+   "text": "V_n=C_2"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    1044.7,
+    392.3,
+    1070.5,
+    432.6
+   ],
+   "text": "01"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    575.8,
+    548.2,
+    680.5,
+    577.3
+   ],
+   "text": "$V_{m}=0$"
+  },
+  {
+   "label": "Section-Header",
+   "bbox": [
+    401.7,
+    628.0,
+    1252.0,
+    660.3
+   ],
+   "text": "FIGURE 3. The decorated fan of an action of Q(1)2 on P22"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    200.8,
+    717.5,
+    1457.5,
+    826.9
+   ],
+   "text": "Example 4.28. Let us use Proposition 4.26 and Corollary 4.27 to classify toric superva-\nrieties with supertorus Q(1){n and underlying variety Pn\\approx X_{3}$ for the complete fan whose\nrays are $_{i = R +x{i} for i = 1, ...,n and $p_{0} = R + (x_1 -. - x_n)."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    200.7,
+    833.2,
+    1453.0,
+    940.0
+   ],
+   "text": "For \\dot i =1, , n, the ray $\\rho_{i}$ must be decorated by a subspace $V_{m}$ such that [V_{jn},V_{j}]\\subseteq\nCx_{i. Hence $V_{j}=C\\theta_{i}$ or 0. Likewise, unless $V_{m}=0, we have $V_{jm}=C\\left(\\theta_{1}+\\theta_{2}± ...+\\theta_{n})$\nfor some 2n-1 choices of ±."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    196.4,
+    949.6,
+    1452.9,
+    1097.7
+   ],
+   "text": "It is straightforward to verify that condition (b) of the definition of a large-orbit\ndecorated fan holds regardless of which subspaces are chosen. We therefore obtain a col-\nlection of 2n (1 + 2^n-1) toric supervarieties which are not equivariantly isomorphic. Many,\nhowever, are isomorphic via toric morphisms (to be defined in the following section)."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    196.1,
+    1104.2,
+    1457.6,
+    1269.2
+   ],
+   "text": "Notice that if all but one of these decorations is nonzero, then the decorated fan\ndescribes a supervariety isomorphic to projective superspace Pn}1n. For instance, if V{n =\nC\\theta_{i}$ and V_{m = 0, then the coordinate superalgebras of the affine charts can be written as\nCt., n. 151, , ton"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.5,
+    1296.1,
+    254.7,
+    1319.2
+   ],
+   "text": "and"
+  },
+  {
+   "label": "Section-Header",
+   "bbox": [
+    514.7,
+    1329.4,
+    1129.9,
+    1369.9
+   ],
+   "text": "Ct 1, . . . . . . . . . . ."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    200.9,
+    1385.2,
+    1046.3,
+    1416.5
+   ],
+   "text": "Figure 3 depicts the corresponding decorated fan for $n = 2,"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    200.9,
+    1424.1,
+    1452.9,
+    1494.6
+   ],
+   "text": "If instead we change the decoration of $\\rho_{0}$ to $\\theta_{1}+ ... +\\theta_{n}, then the resulting affine\ncharts have coordinate superalgebras"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.4,
+    1513.3,
+    992.5,
+    1600.3
+   ],
+   "text": "and\nCt., n. 151., tan"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    226.1,
+    1619.0,
+    1423.0,
+    1664.6
+   ],
+   "text": ""
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    196.4,
+    1687.1,
+    1453.0,
+    1756.4
+   ],
+   "text": "so the supervariety is decidedly not isomorphic to projective superspace. Figure 4(B)\ndepicts corresponding decorated fan for $n = 1."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    195.9,
+    1785.7,
+    1457.9,
+    1933.4
+   ],
+   "text": "In general, when $T = Q(1)n, there are finitely many possible decorations for each\nray. Namely, for $\\rho = R{+}(a1}x_1 + ... + a_{n}x_{n}), there are 2^d}{-1} many possible “square root\nsubspaces” C({a101±. + {an_n}), where d is the number of indices i = 1, ...,n for which\na_{i}\\neq0."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    200.8,
+    1941.3,
+    1457.5,
+    2049.6
+   ],
+   "text": "The prior example admitted no issues of compatibility between different rays of the\nsame cone. This is not ordinarily the case; if $\\rho_{1}= R_{+}(a_{1x_1+ ... + a_{n}x_{n}$ and $\\rho_{2}=\nR{+ (b1}x_{1+ ... + b_n}x_{n}), compatibility is less common if the linear matroid on the n vectors"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    709.8,
+    2063.7,
+    948.5,
+    2143.7
+   ],
+   "text": "(2) (h)"
+  }
+ ],
+ "markdown": "## V_n=C_2\n\n01\n\n$$V_{m}=0$$\n\n## FIGURE 3. The decorated fan of an action of Q(1)2 on P22\n\nExample 4.28. Let us use Proposition 4.26 and Corollary 4.27 to classify toric supervarieties with supertorus Q(1){n and underlying variety Pn\\approx X_{3}$ for the complete fan whose rays are $_{i = R +x{i} for i = 1, ...,n and $p_{0} = R + (x_1 -. - x_n).\n\nFor \\dot i =1, , n, the ray $\\rho_{i}$ must be decorated by a subspace $V_{m}$ such that [V_{jn},V_{j}]\\subseteq Cx_{i. Hence $V_{j}=C\\theta_{i}$ or 0. Likewise, unless $V_{m}=0, we have $V_{jm}=C\\left(\\theta_{1}+\\theta_{2}± ...+\\theta_{n})$ for some 2n-1 choices of ±.\n\nIt is straightforward to verify that condition (b) of the definition of a large-orbit decorated fan holds regardless of which subspaces are chosen. We therefore obtain a collection of 2n (1 + 2^n-1) toric supervarieties which are not equivariantly isomorphic. Many, however, are isomorphic via toric morphisms (to be defined in the following section).\n\nNotice that if all but one of these decorations is nonzero, then the decorated fan describes a supervariety isomorphic to projective superspace Pn}1n. For instance, if V{n = C\\theta_{i}$ and V_{m = 0, then the coordinate superalgebras of the affine charts can be written as Ct., n. 151, , ton\n\nand\n\n## Ct 1, . . . . . . . . . . .\n\nFigure 3 depicts the corresponding decorated fan for $n = 2,\n\nIf instead we change the decoration of $\\rho_{0}$ to $\\theta_{1}+ ... +\\theta_{n}, then the resulting affine charts have coordinate superalgebras\n\nand Ct., n. 151., tan\n\nso the supervariety is decidedly not isomorphic to projective superspace. Figure 4(B) depicts corresponding decorated fan for $n = 1.\n\nIn general, when $T = Q(1)n, there are finitely many possible decorations for each ray. Namely, for $\\rho = R{+}(a1}x_1 + ... + a_{n}x_{n}), there are 2^d}{-1} many possible “square root subspaces” C({a101±. + {an_n}), where d is the number of indices i = 1, ...,n for which a_{i}\\neq0.\n\nThe prior example admitted no issues of compatibility between different rays of the same cone. This is not ordinarily the case; if $\\rho_{1}= R_{+}(a_{1x_1+ ... + a_{n}x_{n}$ and $\\rho_{2}= R{+ (b1}x_{1+ ... + b_n}x_{n}), compatibility is less common if the linear matroid on the n vectors\n\n(2) (h)"
+}

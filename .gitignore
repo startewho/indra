@@ -5,3 +5,10 @@ __pycache__/
 dist/
 build/
 uv.lock
+
+# C# port
+dotnet/**/bin/
+dotnet/**/obj/
+dotnet/**/TestResults/
+dotnet/tests/parity/actual/
+*.user
