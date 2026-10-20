@@ -8,10 +8,16 @@ The plan, stage list and parity rules live in
 dotnet/
   IndraOcr.sln
   src/IndraOcr/            # core library (one file per Python module)
-  src/IndraOcr.Cli/        # indra-ocr equivalent
+    Numerics/              # Np, Unicode tables, .npy/.npz reader
+    Imaging/               # OpenCV wrappers
+    Models/                # model folder + Hugging Face download
+    Vocab/                 # CTC vocabulary
+    Pipeline/              # Meta, DetPost, RecPreproc, LineMask, OrtOcr
+    Lm/                    # n-gram LM + CTC beam search
+  src/IndraOcr.Cli/        # indra-ocr equivalent (S6)
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent (S7)
-  tests/IndraOcr.Tests/    # xUnit: ported from tests/
-  tests/parity/golden/     # reference outputs from the Python implementation
+  tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
+  tests/parity/            # golden data, detector/recognizer artifacts, LM fixture
 ```
 
 ## Build and test
@@ -22,21 +28,41 @@ dotnet test
 ```
 
 Requires the .NET 10 SDK (the .NET 11 SDK also builds `net10.0` targets).
+Parity tests skip themselves when no model folder is found. They look at
+`INDRA_OCR_MODEL_DIR` first, then at the Python package's Hugging Face cache
+(`~/.cache/huggingface/hub/models--datalab-to--indra-ocr/snapshots/*`).
+
+The core library downloads the models on first use, into
+`%LOCALAPPDATA%/indra-ocr/models/datalab-to--indra-ocr/<revision>`. Set
+`HF_ENDPOINT` to use a mirror (the default `huggingface.co` is not reachable from
+every network), and `HF_TOKEN` for a private repository. Downloads use the plain
+`resolve` URLs, not the Xet CAS endpoint, so mirrors work.
 
 ## Parity harness
 
-Golden data is produced by the Python reference implementation, not by the port:
+Reference data always comes from the Python implementation, never from the port.
 
 ```shell
-# once, from the repository root (needs the Python env of section "环境" in the plan)
-python tools/dump_golden.py --out dotnet/tests/parity/golden examples/samples/scan.png
-
-# compare the port's output (same folder layout) with the golden data
+# from the repository root (needs the Python env from the plan, section 2.3)
+python tools/make_samples.py                                   # synthetic pages
+python tools/dump_golden.py   --out dotnet/tests/parity/golden examples/samples/scan.png
+python tools/dump_artifacts.py --out dotnet/tests/parity/artifacts <pages...>
+python tools/dump_lm_fixture.py                                # LM + beam fixture
 python tools/compare_golden.py dotnet/tests/parity/golden dotnet/tests/parity/actual
 ```
 
+`tests/parity/artifacts/` is gitignored (about 40 MB); regenerate it with
+`dump_artifacts.py` after a fresh clone. The golden page JSON and the small LM
+fixture are checked in.
+
 Rules: text / reading order / markdown / `note` / `source` must match exactly;
-boxes within 0.5 px, confidences within 1e-4.
+boxes within 0.5 px, confidences within 1e-4, detector tensors within 1e-6, line
+crops byte for byte.
+
+What the current tests cover (S1–S2): detector input/output/boxes, adaptive
+second pass, line crops (32 px and 96 px window), CTC output, script routing,
+confidence competition, LM log-probabilities and beam search. Reading order,
+layout, markdown, PDF and math are later stages.
 
 ## Native dependencies
 

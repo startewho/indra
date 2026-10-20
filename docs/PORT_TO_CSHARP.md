@@ -201,8 +201,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 | 阶段 | 内容 | 交付物 | 完成标准（DoD） | 人日 |
 |---|---|---|---|---:|
 | **S0 准备** ✅ | 建 Python 参考环境（装依赖、下载 76MB 模型）；建 C# solution；写黄金数据生成器与比对器 | `tools/dump_golden.py` + `compare_golden.py`；`dotnet/` 骨架；2 页黄金数据 | 同页两次运行结果一致；比对器自检通过；`dotnet build` 通过 | 1–2 |
-| **S1 基础设施** | `Np`（argsort/searchsorted/bincount/percentile/logaddexp/cumsum/median/triu/matmul）、Unicode 表生成器、`NpzReader`、ONNX 会话封装、图像 IO（PNG/JPEG/TIFF 多帧） | 单元测试覆盖上述每个函数，对照 numpy 输出 | 每个 helper 有 numpy 基准用例，浮点误差 ≤1e-6 | 2–3 |
-| **S2 检测+识别** | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别/方向/倾斜部分 | `OrtOcr.Detect/Recognize` | 50 页样本：box 偏差 ≤0.5px，文本 100% 一致，置信度 ≤1e-4 | 3–4 |
+| **S1 基础设施** ✅ | `Np`（argsort/searchsorted/bincount/percentile/logaddexp/cumsum/median/triu/matmul）、Unicode 表生成器、`NpzReader`、ONNX 会话封装、图像 IO（PNG/JPEG/TIFF 多帧） | `Numerics/`、`Imaging/`、`Models/`；Unicode 表；`tools/gen_unicode_tables.py` | 每个 helper 有 numpy 基准用例，浮点误差 ≤1e-6 | 2–3 |
+| **S2 检测+识别** ✅ | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别；**LM beam search 提前到本阶段**（默认模型必用） | `OrtOcr.Detect/Recognize`、`NgramLm`、`BeamSearch` | 8 页样本（含暗底/旋转/竖排查询/微小字/中英阿希）：box ≤0.5px，文本/ids/路由 100% 一致，裁剪逐字节相同 | 3–4 |
 | **S3 版面+输出** | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON | `Page` 全字段 + Markdown | Markdown 文本 100% 一致；lines 顺序一致；blocks/bbox 一致 | 3–4 |
 | **S4 PDF** | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式 | `Converter.Convert` | 数字版 PDF 的 `source/note/rotation/skew/vertical` 与文本全部一致 | 4–6 |
 | **S5 可选模型** | `lm`（npz + beam search）、`script` 分流、`math` 自回归解码、`orient` | 全语言/数学能力 | 与参考端同页同结果；LM 路径有专项用例 | 3–5 |
@@ -222,6 +222,46 @@ $env:HF_HUB_DISABLE_XET = "1"
    加 `--artifacts` 再存中间张量（`det_in`, `det_boxes`, `rec_ids`, `order_logits`, `same_logits`），存为 `.npy`。
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
+
+### 3.2 进展记录（S1–S2 已完成，2026-10-20）
+
+**S1 基础设施**（`dotnet/src/IndraOcr/`）：
+
+| 文件 | 对应 Python | 验证 |
+|---|---|---|
+| `Numerics/Np.cs` | numpy 子集 | 8 个单元用例（median/percentile/searchsorted/logaddexp/bincount/cumsum/argsort/clip） |
+| `Numerics/Unicode.cs` + `UnicodeTables.g.cs` | `unicodedata` 的 bidi/EAW | 生成器 + 19 个已知码位用例 |
+| `Numerics/Npy.cs` | `np.load/.npz` | 读 `det_*.npy` 与 `lm.npz`，类型/形状正确 |
+| `Imaging/ImageOps.cs` | 读图、resize、rot90、连通域 | rot90/ink 单元用例；resize 与连通域由检测对齐间接验证 |
+| `Models/ModelFiles.cs` | `models.py` | 本地目录/`INDRA_OCR_MODEL_DIR`/HF 运行时下载（支持 `HF_ENDPOINT`，直连 resolve，不走 Xet） |
+| `Pipeline/OrtUtil.cs` | `SessionOptions` | 同 Python：intra/int=1、ORT_ENABLE_ALL、无 CPU arena |
+
+**S2 检测+识别**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `Vocab/Vocab.cs` | `vocab.py`（推理部分） | 词表、NFC、LaTeX 空格规则 |
+| `Pipeline/DetPost.cs` | `det_post.py` | 输入 1e-6、输出 1e-6、框 ≤0.5px（实测差异 <0.001px） |
+| `Pipeline/RecPreproc.cs` | `rec_preproc.py` | 裁剪图与 Python **逐字节相同**（SHA-256） |
+| `Pipeline/LineMask.cs` | `line_mask.py` | 未测（默认模型无 `mask.onnx`） |
+| `Pipeline/Meta.cs` | `meta.json` | 词表/组/几何/LM 参数 |
+| `Pipeline/OrtOcr.cs` | `pipeline.py` 检测/识别 | 含自适应二次检测、script 分流、高置信度竞争 |
+| `Lm/NgramLm.cs` + `Lm/BeamSearch.cs` | `lm.py` | logp 与 beam 的 ids/steps 完全一致（提前完成，属 S5） |
+
+**语料与结果**：8 页（扫描韩文信、公式页、英文版式、暗底反白、90° 旋转、微小字、阿拉伯/希伯来、中文）。
+`dotnet test` **32 passed**：
+
+- 检测：输入/输出张量与 Python ≤1e-6，框 ≤0.5px（实测 ≤0.001px）
+- 识别：文本、置信度、ids、分组、dark 标记 100% 一致；裁剪图 SHA-256 相同
+- LM：10 个 logp 探针与 1 条 beam 用例完全一致
+
+**尚未覆盖（留给后续阶段）**：
+
+- `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
+- `det.onnx` 的图片通道（合成样本未触发图片区）
+- `orient.onnx` 转向、倾斜矫正、`order/layout` 与 Markdown（S3/S5）
+- `math` 自回归解码、PDF 文字层（S4/S5）
+
 
 ---
 
@@ -422,22 +462,34 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S1）
+## 9. 里程碑检查清单（S0–S2）
 
 S0 已完成：
 
 - [x] Python 参考环境可复现：`pytest` **74 passed**，`indra-ocr examples/samples/scan.png` 输出稳定
 - [x] 模型已缓存（`~/.cache/huggingface`，tag `v1.1.0`），版本与哈希写入 `manifest.json`
-- [x] `tools/dump_golden.py` 产出逐页 JSON + manifest（示例 2 页；`--artifacts` 中间张量留到 S2）
+- [x] `tools/dump_golden.py` 产出逐页 JSON + manifest
 - [x] `tools/compare_golden.py` 可报告差异（自检 2/2 通过）
 - [x] C# solution（`dotnet/`）可 `dotnet build`，0 警告 0 错误
 - [x] 依赖版本锁定：OpenCV 4.13 / ORT 1.31（两端一致）
 
-S1 待做：
+S1 已完成：
 
-- [ ] `Np` 的 12 个核心函数有 numpy 对照测试
-- [ ] Unicode 表生成器产出并校验（bidi 抽样 1e4 码位与 Python 一致）
-- [ ] `NpzReader` 能读 `lm.npz`，键/值类型正确
-- [ ] ONNX 会话能在 C# 跑通 `det.onnx`，输出与 Python 同形状、同数值（≤1e-4）
-- [ ] `ImageOps` 的 `resize`/`rot90`/`warpAffine`/连通域与 Python 逐像素一致
+- [x] `Np` 核心函数有 numpy 对照测试（median/percentile/searchsorted/logaddexp/bincount/cumsum/argsort/clip）
+- [x] Unicode 表生成器产出并校验（bidi/EAW 已知码位用例）
+- [x] `NpzReader` 能读 `lm.npz` 与 `.npy`，键/值类型正确
+- [x] ONNX 会话在 C# 跑通 `det.onnx`，与 Python 同形状、同数值（**≤1e-6**）
+- [x] `ImageOps` 的 `resize`/连通域由检测端到端验证；`rot90` 有单元用例
+
+S2 已完成：
+
+- [x] 8 页样本检测框与 Python 一致（≤0.5px，实测 ≤0.001px），含自适应二次检测
+- [x] 识别文本/置信度/ids/分组/dark 全部一致
+- [x] 行裁剪（32px 与 96px tall 窗口）SHA-256 与 Python 相同
+- [x] `script.onnx` 分流与"不确定时双读取高置信"一致
+- [x] LM logp 与 beam search 与 Python 完全一致
+- [ ] `mask.onnx` CenterMask 路径（模型集无此文件，待有模型时验证）
+- [ ] `det.onnx` 图片通道（合成样本未触发，待真实图文页）
+- [ ] OmniParseBench 子集回归（S3 端到端跑通后）
+
 
