@@ -232,7 +232,7 @@ public sealed class OcrSession : IDisposable
         var lines = new JsonArray();
         foreach (var line in page.Lines)
         {
-            lines.Add(new JsonObject
+            lines.Add((JsonNode)new JsonObject
             {
                 ["box"] = new JsonArray(line.Box.Select(v => (JsonNode?)(double)v).ToArray()),
                 ["text"] = line.Text,
@@ -242,7 +242,7 @@ public sealed class OcrSession : IDisposable
         var blocks = new JsonArray();
         foreach (var block in page.Blocks)
         {
-            blocks.Add(new JsonObject
+            blocks.Add((JsonNode)new JsonObject
             {
                 ["label"] = block.Label,
                 ["bbox"] = new JsonArray(block.Bbox.Select(v => (JsonNode?)(double)v).ToArray()),

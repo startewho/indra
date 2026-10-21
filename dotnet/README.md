@@ -150,9 +150,31 @@ stats; each page shows the image with line boxes, layout blocks, labels and
 reading order, plus Preview / Markdown / Lines / JSON tabs. Hovering a line in
 the list highlights its box. Pages appear as they finish.
 
-The model path can be typed, chosen with a folder picker, or left empty to use
+The UI follows the system language (English or Chinese) and can be switched in
+the top bar; the choice is remembered. While a document is being read, a
+spinning overlay covers the window and blocks input. The model path can be
+typed, chosen with a folder picker, or left empty to use
 `INDRA_OCR_MODEL_DIR` / the cache; `Download` fetches or verifies the models
 (including the math models when Math is on). Tesseract comparison is disabled.
+
+### NativeAOT publish
+
+The desktop app ships as a NativeAOT executable:
+
+```shell
+pwsh ./publish-desktop.ps1
+# -> dist/desktop/IndraOcr.Desktop.exe
+```
+
+The script rebuilds first and then publishes with `--no-build`. Avalonia
+compiles XAML from `CoreCompile`; an incremental `dotnet publish` can skip that
+step and produce an AOT image without compiled XAML. Plain `dotnet publish` is
+therefore a managed build, not an AOT one. NativeAOT needs the MSVC C++ build
+tools (`link.exe`) and takes a few minutes; the output is about 165 MB because
+ONNX Runtime, OpenCV, PDFium and Skia ship as native libraries. ILC reports two
+trim warnings from unused `OpenCvSharp.Mat.Cast<T>`/`Get<T>` helpers; the paths
+used by Indra OCR are AOT-safe and were verified with a real OCR run.
+
 
 ## Native dependencies
 

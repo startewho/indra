@@ -22,10 +22,10 @@ public static class LayoutPost
     public static readonly int List = Array.IndexOf(OrderPost.BlockClasses, "List-Group");
     public static readonly int Table = Array.IndexOf(OrderPost.BlockClasses, "Table");
 
-    private static readonly Regex WholeMath = new(@"^\$[^$]+\$$", RegexOptions.Compiled);
+    private static readonly Regex WholeMath = new(@"^\$[^$]+\$$", RegexOptions.CultureInvariant);
     private static readonly Regex Item = new(
         @"^\s*([•\-–▪◦*·→]|\(?\d{1,3}[.)]|\(?[a-zA-Z][.)])(\s|$)",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        RegexOptions.CultureInvariant);
 
     /// <summary>Han, kana, CJK punctuation and fullwidth forms: no spaces between them.</summary>
     public static bool IsCjk(char c)

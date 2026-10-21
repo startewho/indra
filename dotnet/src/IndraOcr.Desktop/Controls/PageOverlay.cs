@@ -94,7 +94,7 @@ public sealed class PageOverlay : Control
                     Math.Max(1, S(block.X1 - block.X0)), Math.Max(1, S(block.Y1 - block.Y0))));
                 if (ShowLabels)
                 {
-                    var text = Label(block.Label, 11 * unit, brush);
+                    var text = Label(BlockText(block.Label), 11 * unit, brush);
                     double lx = Math.Max(ox, X(block.X0) - 2);
                     double ly = Math.Max(oy + text.Height, Y(block.Y0) - 5 * unit);
                     context.DrawRectangle(LabelBackground, null,
@@ -140,4 +140,21 @@ public sealed class PageOverlay : Control
     private static FormattedText Label(string text, double size, IBrush brush)
         => new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             LabelTypeface, Math.Max(7, size), brush);
+
+    /// <summary>The layout block name in the UI language.</summary>
+    public static string BlockText(string label) => label switch
+    {
+        "Text" => Loc.T("Text", "正文"),
+        "Section-Header" => Loc.T("Section Header", "章节标题"),
+        "Page-Header" => Loc.T("Header/Footer", "页眉/页脚"),
+        "Page-Footer" => Loc.T("Header/Footer", "页眉/页脚"),
+        "List-Group" => Loc.T("List Group", "列表"),
+        "Table" => Loc.T("Table", "表格"),
+        "Caption" => Loc.T("Caption", "图注"),
+        "Footnote" => Loc.T("Footnote", "脚注"),
+        "Table-Of-Contents" => Loc.T("Table Of Contents", "目录"),
+        "Form" => Loc.T("Form", "表单"),
+        "Picture" => Loc.T("Picture", "图片"),
+        _ => label,
+    };
 }

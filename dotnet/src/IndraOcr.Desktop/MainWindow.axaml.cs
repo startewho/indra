@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -53,8 +54,21 @@ public partial class MainWindow : Window
         ["Form"] = "#DC2626",
     };
 
+    private static string StageLabel(string key) => key switch
+    {
+        "text_ms" => Loc.T("Text layer", "文字层"),
+        "det_ms" => Loc.T("Detect", "检测"),
+        "rec_ms" => Loc.T("Recognize", "识别"),
+        "ocr_ms" => Loc.T("OCR in images", "图片内 OCR"),
+        "math_ms" => Loc.T("Math", "数学"),
+        "order_ms" => Loc.T("Order", "阅读序"),
+        _ => key,
+    };
+
     private readonly List<PageOverlay> _overlays = new();
     private readonly List<Bitmap> _images = new();
+    private readonly List<PageResult> _pages = new();
+    private bool _languageReady;
     private readonly List<IReadOnlyDictionary<string, double>> _timings = new();
     private OcrSession? _session;
     private CancellationTokenSource? _cts;
@@ -70,9 +84,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         VersionText.Text = "v" + IndraOcrInfo.Version;
         ModelPathBox.Text = Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR") ?? "";
-        BuildLegend();
-        UpdateModeHint();
-        UpdateModelStatus();
+        LanguageBox.SelectedIndex = Loc.Chinese ? 1 : 0;
+        ApplyLanguage();
+        _languageReady = true;
 
         DragDrop.SetAllowDrop(DropZone, true);
         DropZone.AddHandler(DragDrop.DragOverEvent, OnDragOver);
@@ -104,6 +118,110 @@ public partial class MainWindow : Window
 
     // ------------------------------------------------------------------ sidebar
 
+    private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_languageReady)
+        {
+            return;
+        }
+        Loc.Set(LanguageBox.SelectedIndex == 1);
+        ApplyLanguage();
+        RebuildCards();
+    }
+
+    private void ApplyLanguage()
+    {
+        DropTitleText.Text = Loc.T("Drop a PDF or an image", "拖入 PDF 或图片");
+        DropSubtitleText.Text = Loc.T("or click to choose a file", "或点击选择文件");
+        SourceCaption.Text = Loc.T("SOURCE", "来源");
+        PipelineCaption.Text = Loc.T("PIPELINE", "管线");
+        ModelCaption.Text = Loc.T("MODEL", "模型");
+        ShowCaption.Text = Loc.T("SHOW", "显示");
+        RunCaption.Text = Loc.T("RUN", "运行");
+
+        ModeAuto.Content = Loc.T("Auto", "自动");
+        ModeOcr.Content = "OCR";
+        ModeText.Content = Loc.T("Text layer", "文字层");
+
+        MathText.Text = Loc.T("Math as LaTeX", "数学公式输出 LaTeX");
+        FurnitureText.Text = Loc.T("Keep headers and footers", "保留页眉和页脚");
+        ImageOcrText.Text = Loc.T("OCR text inside images", "OCR 图片内的文字");
+        TesseractText.Text = Loc.T("Compare with Tesseract", "与 Tesseract 对比");
+        DpiCaption.Text = "DPI";
+        MaxPagesCaption.Text = Loc.T("MAX PAGES", "最大页数");
+        RerunButton.Content = Loc.T("Read again with these options", "用这些选项重新读取");
+        BrowseButton.Content = Loc.T("Choose folder...", "选择目录…");
+        DownloadButton.Content = Loc.T("Download", "下载模型");
+        ModelPathBox.PlaceholderText = Loc.T(
+            "Empty: download to the cache", "留空则自动下载到缓存");
+
+        LinesText.Text = Loc.T("Lines", "行");
+        BlocksText.Text = Loc.T("Layout blocks", "版面块");
+        LabelsText.Text = Loc.T("Block labels", "块标签");
+        OrderText.Text = Loc.T("Reading order", "阅读序");
+
+        EmptyTitle.Text = Loc.T("Read a document", "读取文档");
+        EmptyText.Text = Loc.T(
+            "Drop a PDF or an image on the left. Pages appear as they finish, with lines, layout blocks and reading order drawn over each page.",
+            "把 PDF 或图片拖到左侧。页面会逐页出现，并在页面上画出行框、版面块和阅读序。");
+
+        CalloutText.Inlines!.Clear();
+        CalloutText.Inlines.Add(new Run(Loc.T(
+            "Need handwriting, math and tables at the highest accuracy? ",
+            "需要更高精度的手写、公式和表格？")));
+        CalloutText.Inlines.Add(new Run("Chandra on Datalab") { Foreground = Accent });
+        CalloutText.Inlines.Add(new Run(Loc.T(
+            " reads them, with $5 in free credits to start.",
+            " 可以识别，并提供 $5 免费额度。")));
+
+        LegendPanel.Children.Clear();
+        BuildLegend();
+        UpdateModeHint();
+        UpdateModelStatus();
+        UpdateStats();
+        if (BusyOverlay.IsVisible)
+        {
+            BusyText.Text = Loc.T("Working ...", "处理中…");
+        }
+        else
+        {
+            StatusText.Text = "";
+            StatusText.Foreground = Ink3;
+        }
+    }
+
+    private void SetBusy(bool busy, string? text = null)
+    {
+        BusyOverlay.IsVisible = busy;
+        BusySpinner.IsActive = busy;
+        Sidebar.IsEnabled = !busy;
+        if (busy)
+        {
+            BusyText.Text = text ?? Loc.T("Working ...", "处理中…");
+        }
+    }
+
+    private void RebuildCards()
+    {
+        if (_pages.Count == 0)
+        {
+            return;
+        }
+        PagesPanel.Children.Clear();
+        foreach (var image in _images)
+        {
+            image.Dispose();
+        }
+        _images.Clear();
+        _overlays.Clear();
+        EmptyState.IsVisible = false;
+        foreach (var page in _pages)
+        {
+            AddPageCard(page, track: false);
+        }
+        UpdateStats();
+    }
+
     private void BuildLegend()
     {
         foreach (var (label, color) in BlockColors.Where(kv => kv.Key != "Page-Footer"))
@@ -125,7 +243,7 @@ public partial class MainWindow : Window
                     },
                     new TextBlock
                     {
-                        Text = label == "Page-Header" ? "Header/Footer" : label.Replace('-', ' '),
+                        Text = PageOverlay.BlockText(label),
                         FontSize = 11,
                         Foreground = Ink3,
                     },
@@ -146,9 +264,12 @@ public partial class MainWindow : Window
     {
         ModeHint.Text = Mode() switch
         {
-            "ocr" => "Ignores the text layer and OCRs every page.",
-            "text" => "Uses the text layer even when the checks fail.",
-            _ => "Reads the PDF text layer where it passes the checks, and OCRs the rest.",
+            "ocr" => Loc.T("Ignores the text layer and OCRs every page.",
+                "忽略文字层，所有页面都走 OCR。"),
+            "text" => Loc.T("Uses the text layer even when the checks fail.",
+                "即使检查不通过也使用文字层。"),
+            _ => Loc.T("Reads the PDF text layer where it passes the checks, and OCRs the rest.",
+                "文字层通过检查时直接读取，其余部分走 OCR。"),
         };
     }
 
@@ -182,8 +303,8 @@ public partial class MainWindow : Window
             : ModelPathBox.Text!.Trim();
         bool ready = OcrSession.ModelsPresent(folder, MathSwitch.IsChecked == true);
         ModelStatusText.Text = ready
-            ? $"Models ready: {folder}"
-            : $"Models not downloaded: {folder}";
+            ? Loc.T($"Models ready: {folder}", $"模型已就绪：{folder}")
+            : Loc.T($"Models not downloaded: {folder}", $"模型未下载：{folder}");
         ModelStatusText.Foreground = ready ? Ok : Warning;
     }
 
@@ -246,6 +367,8 @@ public partial class MainWindow : Window
     private async Task OpenPathAsync(string path)
     {
         _cts?.Cancel();
+        _runId++;
+        SetBusy(true, Loc.T("Opening ...", "正在打开…"));
         if (_readTask is not null)
         {
             try
@@ -269,8 +392,9 @@ public partial class MainWindow : Window
         }
         catch (Exception e)
         {
+            SetBusy(false);
             StatusText.Foreground = Error;
-            StatusText.Text = "Error: " + e.Message;
+            StatusText.Text = Loc.T("Error: ", "错误：") + e.Message;
         }
     }
 
@@ -303,18 +427,21 @@ public partial class MainWindow : Window
             image.Dispose();
         }
         _images.Clear();
-        EmptyState.IsVisible = false;
         _overlays.Clear();
+        _pages.Clear();
+        EmptyState.IsVisible = false;
         _timings.Clear();
         StatsText.Text = "";
         StatusText.Foreground = Ink3;
-        BusyBar.IsVisible = true;
+        SetBusy(true, Loc.T("Loading models ...", "正在加载模型…"));
         var watch = Stopwatch.StartNew();
         try
         {
             StatusText.Text = options.Math
-                ? "Loading models (math models download on first use) ..."
-                : "Loading models (first run downloads about 76 MB) ...";
+                ? Loc.T("Loading models (math models download on first use) ...",
+                    "正在加载模型（数学模型首次使用会下载）…")
+                : Loc.T("Loading models (first run downloads about 76 MB) ...",
+                    "正在加载模型（首次运行约下载 76 MB）…");
             await Task.Run(() => _session.ResolveModels(options.Math), token);
 
             for (int i = 0; i < total; i++)
@@ -324,9 +451,15 @@ public partial class MainWindow : Window
                 {
                     return;
                 }
-                StatusText.Text = $"Reading page {i + 1} of {total}"
-                                  + (_session.PageCount > total ? $" (first {total} of {_session.PageCount})" : "")
-                                  + " ...";
+                string reading = Loc.T(
+                    $"Reading page {i + 1} of {total}"
+                    + (_session.PageCount > total ? $" (first {total} of {_session.PageCount})" : "")
+                    + " ...",
+                    $"正在识别第 {i + 1} 页，共 {total} 页"
+                    + (_session.PageCount > total ? $"（前 {total} 页，共 {_session.PageCount} 页）" : "")
+                    + "…");
+                StatusText.Text = reading;
+                BusyText.Text = reading;
                 int index = i;
                 var page = await Task.Run(() => _session.ReadPage(index, options), token);
                 if (token.IsCancellationRequested || runId != _runId)
@@ -337,7 +470,10 @@ public partial class MainWindow : Window
                 _timings.Add(page.Timings);
                 UpdateStats();
             }
-            StatusText.Text = $"{total} page{(total == 1 ? "" : "s")} in {watch.Elapsed.TotalMilliseconds:0} ms";
+            double elapsed = watch.Elapsed.TotalMilliseconds;
+            StatusText.Text = Loc.T(
+                $"{total} page{(total == 1 ? "" : "s")} in {elapsed:0} ms",
+                $"{total} 页，用时 {elapsed:0} ms");
         }
         catch (OperationCanceledException)
         {
@@ -346,13 +482,13 @@ public partial class MainWindow : Window
         catch (Exception e)
         {
             StatusText.Foreground = Error;
-            StatusText.Text = "Error: " + e.Message;
+            StatusText.Text = Loc.T("Error: ", "错误：") + e.Message;
         }
         finally
         {
             if (runId == _runId)
             {
-                BusyBar.IsVisible = false;
+                SetBusy(false);
             }
         }
     }
@@ -368,17 +504,23 @@ public partial class MainWindow : Window
         double perPage = total / _timings.Count;
         double perSecond = total > 0 ? 1000.0 * _timings.Count / total : 0;
         var parts = Stages
-            .Select(s => (s.Label, Ms: _timings.Sum(t => t.GetValueOrDefault(s.Key)) / _timings.Count))
+            .Select(s => (s.Key, Ms: _timings.Sum(t => t.GetValueOrDefault(s.Key)) / _timings.Count))
             .Where(s => s.Ms > 0)
-            .Select(s => $"{s.Label} {s.Ms:0} ms");
-        StatsText.Text = $"{perPage:0} ms per page · {perSecond:0.0} pages/s\n"
+            .Select(s => $"{StageLabel(s.Key)} {s.Ms:0} ms");
+        StatsText.Text = Loc.T(
+            $"{perPage:0} ms per page · {perSecond:0.0} pages/s\n",
+            $"{perPage:0} ms/页 · {perSecond:0.0} 页/秒\n")
                          + string.Join(" · ", parts);
     }
 
     // -------------------------------------------------------------------- cards
 
-    private void AddPageCard(PageResult page)
+    private void AddPageCard(PageResult page, bool track = true)
     {
+        if (track)
+        {
+            _pages.Add(page);
+        }
         using var stream = new MemoryStream(page.ImageJpeg);
         var bitmap = new Bitmap(stream);
         _images.Add(bitmap);
@@ -435,7 +577,7 @@ public partial class MainWindow : Window
         };
         var title = new TextBlock
         {
-            Text = $"Page {page.Number}",
+            Text = Loc.T($"Page {page.Number}", $"第 {page.Number} 页"),
             FontSize = 15,
             FontWeight = FontWeight.SemiBold,
             Foreground = Ink,
@@ -445,11 +587,17 @@ public partial class MainWindow : Window
         var chip = SourceChip(page.Source);
         chip.VerticalAlignment = VerticalAlignment.Center;
         chip.Margin = new Thickness(0, 0, 10, 0);
-        string extra = (page.Rotation != 0 ? $" · turned {page.Rotation}°" : "")
-                       + (page.Skew != 0 ? $" · straightened {page.Skew:0.0}°" : "");
+        string extra = (page.Rotation != 0
+                            ? Loc.T($" · turned {page.Rotation}°", $" · 旋转 {page.Rotation}°")
+                            : "")
+                       + (page.Skew != 0
+                            ? Loc.T($" · straightened {page.Skew:0.0}°", $" · 校正 {page.Skew:0.0}°")
+                            : "");
         var meta = new TextBlock
         {
-            Text = $"{page.Lines.Count} lines · {page.Blocks.Count} blocks{extra}",
+            Text = Loc.T(
+                $"{page.Lines.Count} lines · {page.Blocks.Count} blocks{extra}",
+                $"{page.Lines.Count} 行 · {page.Blocks.Count} 块{extra}"),
             FontFamily = Mono,
             FontSize = 12,
             Foreground = Ink3,
@@ -489,9 +637,9 @@ public partial class MainWindow : Window
     {
         (string Label, string Background, string Foreground) style = source switch
         {
-            "text" => ("Text layer", "#E8F5E9", "#2E7D32"),
-            "hybrid" => ("Text layer + OCR", "#FFF4E5", "#B45309"),
-            "error" => ("Error", "#FDEcea", "#B91C1C"),
+            "text" => (Loc.T("Text layer", "文字层"), "#E8F5E9", "#2E7D32"),
+            "hybrid" => (Loc.T("Text layer + OCR", "文字层 + OCR"), "#FFF4E5", "#B45309"),
+            "error" => (Loc.T("Error", "错误"), "#FDEcea", "#B91C1C"),
             _ => ("OCR", "#E8ECFF", "#1D4ED8"),
         };
         return new Border
@@ -540,7 +688,7 @@ public partial class MainWindow : Window
                 Height = 6,
                 Background = new SolidColorBrush(Color.Parse(color)),
             };
-            ToolTip.SetTip(segment, $"{label} {ms:0} ms");
+            ToolTip.SetTip(segment, $"{StageLabel(key)} {ms:0} ms");
             panel.Children.Add(segment);
         }
         return box;
@@ -601,10 +749,11 @@ public partial class MainWindow : Window
             Padding = new Thickness(12, 10),
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
-        tabs.Items.Add(new TabItem { Header = "Preview", Content = preview });
+        tabs.Items.Add(new TabItem { Header = Loc.T("Preview", "预览"), Content = preview });
         tabs.Items.Add(new TabItem { Header = "Markdown", Content = markdown });
-        tabs.Items.Add(new TabItem { Header = "Lines", Content = lines });
+        tabs.Items.Add(new TabItem { Header = Loc.T("Lines", "行"), Content = lines });
         tabs.Items.Add(new TabItem { Header = "JSON", Content = json });
+        tabs.SelectedIndex = 0;
         return tabs;
     }
 
@@ -645,7 +794,9 @@ public partial class MainWindow : Window
             };
             var text = new SelectableTextBlock
             {
-                Text = string.IsNullOrEmpty(line.Text) ? "(no text)" : line.Text,
+                Text = string.IsNullOrEmpty(line.Text)
+                    ? Loc.T("(no text)", "（无文字）")
+                    : line.Text,
                 TextWrapping = TextWrapping.Wrap,
                 FontSize = 13,
                 Foreground = string.IsNullOrEmpty(line.Text)
@@ -716,9 +867,9 @@ public partial class MainWindow : Window
     private async void OnDownloadModels(object? sender, RoutedEventArgs e)
     {
         DownloadButton.IsEnabled = false;
-        BusyBar.IsVisible = true;
+        SetBusy(true, Loc.T("Downloading models ...", "正在下载模型…"));
         StatusText.Foreground = Ink3;
-        StatusText.Text = "Downloading models ...";
+        StatusText.Text = Loc.T("Downloading models ...", "正在下载模型…");
         try
         {
             string? folder = string.IsNullOrWhiteSpace(ModelPathBox.Text)
@@ -730,19 +881,19 @@ public partial class MainWindow : Window
             _session?.SetModelDir(resolved);
             UpdateModelStatus();
             StatusText.Foreground = Ok;
-            StatusText.Text = $"Models ready: {resolved}";
+            StatusText.Text = Loc.T($"Models ready: {resolved}", $"模型已就绪：{resolved}");
         }
         catch (Exception ex)
         {
             ModelStatusText.Foreground = Error;
-            ModelStatusText.Text = "Download failed: " + ex.Message;
+            ModelStatusText.Text = Loc.T("Download failed: ", "下载失败：") + ex.Message;
             StatusText.Foreground = Error;
-            StatusText.Text = "Download failed: " + ex.Message;
+            StatusText.Text = Loc.T("Download failed: ", "下载失败：") + ex.Message;
         }
         finally
         {
             DownloadButton.IsEnabled = true;
-            BusyBar.IsVisible = false;
+            SetBusy(false);
         }
     }
 

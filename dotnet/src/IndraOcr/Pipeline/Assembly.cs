@@ -16,7 +16,7 @@ public static class Assembly
     private static readonly HashSet<char> Bullets = new("•◦▪▫●○■□‣⁃∙*");
     private static readonly Regex Enumerator = new(
         @"\A(?:(?:\d{1,3}|[A-Za-z])[.)]|\((?:\d{1,3}|[A-Za-z]|[ivxlcIVXLC]{1,5})\))\z",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        RegexOptions.CultureInvariant);
 
     public static bool IsSpace(Token t, int spaceId) => t.Char is null ? t.Id == spaceId : t.Char == " ";
 

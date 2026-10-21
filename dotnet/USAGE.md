@@ -1,10 +1,10 @@
 # Indra OCR（.NET / C# 版）使用说明
 
-本文面向使用者，说明如何构建、运行 `.NET` 版 Indra OCR 的命令行工具（CLI）和本地 Web 查看器（Viewer）。
+本文面向使用者，说明如何构建、运行 `.NET` 版 Indra OCR 的命令行工具（CLI）、本地 Web 查看器（Viewer）和桌面 GUI。
 
 - 源码位置：本仓库 `dotnet/`
 - 参考实现：同仓库的 Python 包 `indra_ocr/`（两者输出已做逐页对齐）
-- 当前状态：S0–S7 已完成；Windows x64 已验证，Linux/macOS 原生库属于 S8 收尾项
+- 当前状态：S0–S7 与桌面 GUI 已完成；Windows x64 已验证（桌面版仅提供 NativeAOT 发布），Linux/macOS 原生库属于 S8 收尾项
 
 ---
 
@@ -309,43 +309,60 @@ $page.source; $page.lines.Count
 
 界面按 Web 查看器布局实现：左侧选项，右侧逐页显示识别结果；页面图上叠加行框、版面块、块标签和阅读序。
 
-### 6.1 启动
+### 6.1 启动与发布
+
+开发运行：
 
 ```powershell
 cd dotnet
 dotnet run --project src/IndraOcr.Desktop
 ```
 
-发布后：
+发布桌面版（**NativeAOT**，唯一支持的发布方式）：
 
 ```powershell
-..\publish\desktop\IndraOcr.Desktop.exe
+cd dotnet
+pwsh ./publish-desktop.ps1
+# 输出：dist\desktop\IndraOcr.Desktop.exe
 ```
 
-也可以把一个文件作为参数直接打开：
+脚本会先 `Rebuild` 再 `publish --no-build`，因为 Avalonia 的 XAML 编译挂在 `CoreCompile` 上，增量 `dotnet publish` 可能跳过它，导致 NativeAOT 程序缺少编译后的 XAML。直接运行 `dotnet publish` 不会启用 AOT。
+
+NativeAOT 需要：
+
+- .NET 10 SDK
+- Visual Studio Build Tools 的 MSVC C++ 工具链（`link.exe`）
+- Windows x64；输出约 165 MB（exe 约 20 MB + ONNX Runtime/OpenCV/PDFium/Skia 等原生库）
+
+发布后也可以把一个文件作为参数直接打开：
 
 ```powershell
-IndraOcr.Desktop.exe paper.pdf
-IndraOcr.Desktop.exe scan.png
+dist\desktop\IndraOcr.Desktop.exe paper.pdf
+dist\desktop\IndraOcr.Desktop.exe scan.png
 ```
 
 文件也可以拖到左上角的虚线区域，或点击选择。识别在后台执行，页会逐页出现。
 
 ### 6.2 界面
 
-- **Source**：Auto / OCR / Text layer，切换后点 “Read again with these options”
+![识别中：全窗遮罩与 Loading 动画](../docs/images/desktop-loading.png)
+
+- **语言**：右上角 `中文 / English` 切换，默认跟随系统语言；选择会记住（`%LOCALAPPDATA%\indra-ocr\desktop-language.txt`）。切换后静态文案、页卡、覆盖层标签、统计和提示立即更新
+- **识别中**：整个窗口显示半透明遮罩 + 旋转点 Loading 动画，并禁止点击（侧栏同时禁用），完成或出错后恢复
+- **Source**：Auto / OCR / Text layer，切换后点 “用这些选项重新读取”
 - **Pipeline**：Math as LaTeX、保留页眉页脚、OCR 图片内文字；DPI（150/200/300）；最大页数
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
-- **Model**：模型目录输入框、`Choose folder...`、`Download`
+- **Model**：模型目录输入框、`选择目录…`、`下载模型`
   - 目录留空：使用 `INDRA_OCR_MODEL_DIR`，否则使用本地缓存
-  - `Download`：下载或校验模型；勾选 Math 时连数学模型一起下载
+  - `下载模型`：下载或校验模型；勾选 Math 时连数学模型一起下载
   - 首次读取时如果模型缺失，也会自动下载（状态栏显示进度）
 - **RUN**：状态、每页耗时、pages/s、各阶段耗时
 - 每页卡片：
   - 页图 + 覆盖层（行框 / 版面块 / 标签 / 阅读序）
-  - 右上角 **Preview / Markdown / Lines / JSON**
-  - `Lines` 中悬停某一行会高亮页面上的对应框
-  - 顶部显示来源（Text layer / OCR / hybrid）、行数、块数、旋转/倾斜、阶段耗时条
+  - 右上角 **预览 / Markdown / 行 / JSON**
+  - `行` 中悬停某一行会高亮页面上的对应框
+  - 顶部显示来源（文字层 / OCR / 混合）、行数、块数、旋转/倾斜、阶段耗时条
+
 
 ### 6.3 与 Web 查看器的区别
 

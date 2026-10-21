@@ -2,8 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="using:IndraOcr.Desktop.Controls"
         mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="900"
         x:Class="IndraOcr.Desktop.MainWindow"
+        x:CompileBindings="True"
         Title="Indra OCR · Datalab"
         Width="1280" Height="820" MinWidth="980" MinHeight="540"
         Background="#FAFAFC"
@@ -39,6 +41,7 @@
         </Style>
     </Window.Styles>
 
+    <Grid>
     <DockPanel>
         <Border DockPanel.Dock="Top" Background="#FFFFFF"
                 BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
@@ -57,6 +60,11 @@
                 </StackPanel>
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="18"
                             VerticalAlignment="Center">
+                    <ComboBox x:Name="LanguageBox" Width="100" SelectedIndex="0"
+                              SelectionChanged="OnLanguageChanged">
+                        <ComboBoxItem Content="English" />
+                        <ComboBoxItem Content="中文" />
+                    </ComboBox>
                     <Button Classes="link" Content="GitHub" Click="OnOpenGithub" />
                     <Button Classes="link" Content="Models" Click="OnOpenModels" />
                     <Button Content="Try Chandra on Datalab" Background="#1D4ED8" Foreground="White"
@@ -66,7 +74,7 @@
         </Border>
 
         <Grid ColumnDefinitions="300,*">
-            <Border Grid.Column="0" Background="#FCFCFD"
+            <Border x:Name="Sidebar" Grid.Column="0" Background="#FCFCFD"
                     BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
@@ -77,9 +85,9 @@
                                     BorderThickness="1" CornerRadius="10" Padding="18,18"
                                     Cursor="Hand" PointerPressed="OnChooseFile">
                                 <StackPanel Spacing="2">
-                                    <TextBlock Text="Drop a PDF or an image" FontWeight="SemiBold"
+                                    <TextBlock x:Name="DropTitleText" Text="Drop a PDF or an image" FontWeight="SemiBold"
                                                HorizontalAlignment="Center" />
-                                    <TextBlock Text="or click to choose a file" FontSize="12"
+                                    <TextBlock x:Name="DropSubtitleText" Text="or click to choose a file" FontSize="12"
                                                Foreground="#6B7280" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Border>
@@ -88,7 +96,7 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Classes="caption" Text="SOURCE" />
+                            <TextBlock x:Name="SourceCaption" Classes="caption" Text="SOURCE" />
                             <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="7"
                                     ClipToBounds="True">
                                 <Grid ColumnDefinitions="*,*,*">
@@ -105,31 +113,31 @@
                         </StackPanel>
 
                         <StackPanel Spacing="10">
-                            <TextBlock Classes="caption" Text="PIPELINE" />
+                            <TextBlock x:Name="PipelineCaption" Classes="caption" Text="PIPELINE" />
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Math as LaTeX" VerticalAlignment="Center" />
+                                <TextBlock x:Name="MathText" Text="Math as LaTeX" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="MathSwitch" OnContent=""
                                               OffContent="" IsCheckedChanged="OnMathChanged" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Keep headers and footers" VerticalAlignment="Center" />
+                                <TextBlock x:Name="FurnitureText" Text="Keep headers and footers" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="FurnitureSwitch"
                                               OnContent="" OffContent="" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="OCR text inside images" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ImageOcrText" Text="OCR text inside images" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="ImageOcrSwitch"
                                               OnContent="" OffContent="" IsChecked="True" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Compare with Tesseract" VerticalAlignment="Center"
+                                <TextBlock x:Name="TesseractText" Text="Compare with Tesseract" VerticalAlignment="Center"
                                            Foreground="#9CA3AF" />
                                 <ToggleSwitch Grid.Column="1" IsEnabled="False" OnContent=""
                                               OffContent="" />
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Classes="caption" Text="DPI" />
+                                    <TextBlock x:Name="DpiCaption" Classes="caption" Text="DPI" />
                                     <ComboBox x:Name="DpiBox" SelectedIndex="1"
                                               HorizontalAlignment="Stretch">
                                         <ComboBoxItem Content="150" />
@@ -138,7 +146,7 @@
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Spacing="4">
-                                    <TextBlock Classes="caption" Text="MAX PAGES" />
+                                    <TextBlock x:Name="MaxPagesCaption" Classes="caption" Text="MAX PAGES" />
                                     <NumericUpDown x:Name="MaxPagesBox" Value="20" Minimum="1"
                                                    Maximum="10000" Increment="1"
                                                    HorizontalAlignment="Stretch" />
@@ -151,11 +159,11 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Classes="caption" Text="MODEL" />
+                            <TextBlock x:Name="ModelCaption" Classes="caption" Text="MODEL" />
                             <TextBox x:Name="ModelPathBox" PlaceholderText="留空则自动下载到缓存"
                                      FontFamily="Consolas" FontSize="12" />
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                <Button Grid.Column="0" Content="Choose folder..." HorizontalAlignment="Stretch"
+                                <Button x:Name="BrowseButton" Grid.Column="0" Content="Choose folder..." HorizontalAlignment="Stretch"
                                         Click="OnBrowseModel" />
                                 <Button Grid.Column="1" x:Name="DownloadButton" Content="Download"
                                         HorizontalAlignment="Stretch" Click="OnDownloadModels" />
@@ -165,24 +173,24 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Classes="caption" Text="SHOW" />
+                            <TextBlock x:Name="ShowCaption" Classes="caption" Text="SHOW" />
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Lines" VerticalAlignment="Center" />
+                                <TextBlock x:Name="LinesText" Text="Lines" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="ShowLinesSwitch" OnContent=""
                                               OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Layout blocks" VerticalAlignment="Center" />
+                                <TextBlock x:Name="BlocksText" Text="Layout blocks" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="ShowBlocksSwitch" OnContent=""
                                               OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Block labels" VerticalAlignment="Center" />
+                                <TextBlock x:Name="LabelsText" Text="Block labels" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="ShowLabelsSwitch" OnContent=""
                                               OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Reading order" VerticalAlignment="Center" />
+                                <TextBlock x:Name="OrderText" Text="Reading order" VerticalAlignment="Center" />
                                 <ToggleSwitch Grid.Column="1" x:Name="ShowOrderSwitch" OnContent=""
                                               OffContent="" IsCheckedChanged="OnDisplayChanged" />
                             </Grid>
@@ -190,9 +198,7 @@
                         </StackPanel>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Classes="caption" Text="RUN" />
-                            <ProgressBar x:Name="BusyBar" IsIndeterminate="True" Height="3"
-                                         IsVisible="False" />
+                            <TextBlock x:Name="RunCaption" Classes="caption" Text="RUN" />
                             <TextBlock x:Name="StatusText" FontFamily="Consolas" FontSize="12"
                                        Foreground="#6B7280" TextWrapping="Wrap" />
                             <TextBlock x:Name="StatsText" FontFamily="Consolas" FontSize="12"
@@ -201,7 +207,7 @@
 
                         <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10"
                                 Background="#F7F8FA" Padding="12">
-                            <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="#4B5563">
+                            <TextBlock x:Name="CalloutText" TextWrapping="Wrap" FontSize="12.5" Foreground="#4B5563">
                                 Need handwriting, math and tables at the highest accuracy?
                                 <Run Foreground="#1D4ED8">Chandra on Datalab</Run> reads them,
                                 with $5 in free credits to start.
@@ -218,9 +224,9 @@
                         <Border x:Name="EmptyState" BorderBrush="#D1D5DB" BorderThickness="1"
                                 CornerRadius="14" Padding="64,64" Background="#FCFCFD">
                             <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                <TextBlock Text="Read a document" FontSize="22" FontWeight="SemiBold"
+                                <TextBlock x:Name="EmptyTitle" Text="Read a document" FontSize="22" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="Drop a PDF or an image on the left. Pages appear as they finish, with lines, layout blocks and reading order drawn over each page."
+                                <TextBlock x:Name="EmptyText" Text="Drop a PDF or an image on the left. Pages appear as they finish, with lines, layout blocks and reading order drawn over each page."
                                            Foreground="#6B7280" TextWrapping="Wrap"
                                            MaxWidth="560" TextAlignment="Center" />
                             </StackPanel>
@@ -230,4 +236,14 @@
             </Border>
         </Grid>
     </DockPanel>
+
+    <Border x:Name="BusyOverlay" IsVisible="False" Background="#B8FFFFFF"
+            ZIndex="10" Cursor="Wait">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+            <controls:LoadingSpinner x:Name="BusySpinner" Width="42" Height="42" />
+            <TextBlock x:Name="BusyText" FontFamily="Consolas" FontSize="13"
+                       Foreground="#374151" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Border>
+    </Grid>
 </Window>

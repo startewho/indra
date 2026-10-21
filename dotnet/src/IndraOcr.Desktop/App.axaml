@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:semi="https://irihi.tech/semi"
              x:Class="IndraOcr.Desktop.App"
-             RequestedThemeVariant="Light">
+             RequestedThemeVariant="Light"
+             x:CompileBindings="True">
     <Application.Styles>
         <semi:SemiTheme Locale="zh-CN" />
     </Application.Styles>
