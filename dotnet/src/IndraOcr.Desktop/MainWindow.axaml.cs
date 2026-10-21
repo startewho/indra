@@ -83,7 +83,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         VersionText.Text = "v" + IndraOcrInfo.Version;
-        ModelPathBox.Text = Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR") ?? "";
+        ModelPathBox.Text = OcrSession.DefaultModelDir();
         LanguageBox.SelectedIndex = Loc.Chinese ? 1 : 0;
         ApplyLanguage();
         _languageReady = true;
@@ -153,7 +153,7 @@ public partial class MainWindow : Window
         BrowseButton.Content = Loc.T("Choose folder...", "选择目录…");
         DownloadButton.Content = Loc.T("Download", "下载模型");
         ModelPathBox.PlaceholderText = Loc.T(
-            "Empty: download to the cache", "留空则自动下载到缓存");
+            "Empty: use the app Data folder", "留空则使用应用 Data 目录");
 
         LinesText.Text = Loc.T("Lines", "行");
         BlocksText.Text = Loc.T("Layout blocks", "版面块");
@@ -914,11 +914,12 @@ public partial class MainWindow : Window
         StatusText.Text = Loc.T("Downloading models ...", "正在下载模型…");
         try
         {
-            string? folder = string.IsNullOrWhiteSpace(ModelPathBox.Text)
-                ? null
+            string folder = string.IsNullOrWhiteSpace(ModelPathBox.Text)
+                ? OcrSession.DefaultModelDir()
                 : ModelPathBox.Text!.Trim();
             bool math = MathSwitch.IsChecked == true;
-            string resolved = await Task.Run(() => ModelFiles.Resolve(folder, math: math));
+            string resolved = await Task.Run(() =>
+                ModelFiles.Resolve(folder, math: math, allowDownload: true));
             ModelPathBox.Text = resolved;
             _session?.SetModelDir(resolved);
             UpdateModelStatus();

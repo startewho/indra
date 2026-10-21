@@ -347,7 +347,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 
 | 文件 | 内容 |
 |---|---|
-| `src/IndraOcr.Desktop/Session/OcrSession.cs` | 打开文档、按选项读单页、模型缓存/下载、JPEG + 行/块 + JSON |
+| `src/IndraOcr.Desktop/Session/OcrSession.cs` | 打开文档、按选项读单页、默认 `Data` 模型路径、下载、JPEG + 行/块 + JSON |
+| `src/IndraOcr.Desktop/Data/` | 随应用发布的 v1.1.0 模型（核心 + math，OpenRAIL-M，含 LICENSE） |
 | `src/IndraOcr.Desktop/Controls/PageOverlay.cs` | 页图叠加行框、版面块、标签、阅读序；框 ↔ 右侧行列表双向悬停高亮 |
 | `src/IndraOcr.Desktop/Controls/LoadingSpinner.cs` | 识别/下载时的旋转点 Loading 动画 |
 | `src/IndraOcr.Desktop/Localization.cs` | 中/英界面切换，默认系统语言，选择持久化 |
@@ -364,7 +365,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 识别中全窗半透明遮罩 + 旋转点动画，侧栏禁用、覆盖层拦截点击
 - 页框悬停：页图上的文本框高亮时，右侧 `行` 列表同步选中对应行；反向悬停行也会高亮页框
 - 页卡 4 个标签页等宽（96 DIP）；重新读取按钮文案为“重新读取”
-- NativeAOT：`publish-desktop.ps1` 发布；真实进程完成 scan.png OCR（36 行/9 blocks），输出约 165 MB
+- 模型：默认 `<exe>\Data`，发布包携带 91.5 MB 模型（核心 + math），离线可用；`下载模型` 写入当前路径
+- NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 256 MB
 - 4 个 session 测试 + 2 个覆盖层命中测试；全量 **73 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
@@ -667,7 +669,8 @@ S7 已完成：
 - [x] 页图覆盖层：行框、版面块、块标签、阅读序、行高亮
 - [x] 页框 ↔ 右侧行列表双向悬停同步高亮
 - [x] 逐页读取、4 个等宽标签页（Preview/Markdown/Lines/JSON）
-- [x] 模型目录输入/选择/下载（含 math）；首次读取自动下载
+- [x] 默认模型路径为应用 `Data`；发布包携带核心 + math 模型，离线可识别
+- [x] 模型目录输入/选择/下载（含 math）；首次读取自动下载到当前路径
 - [x] 来源/管线/DPI/最大页数/显示开关；真实文件与拖放打开
 - [x] 高 DPI 适配（PerMonitorV2 manifest + 按可用屏幕收敛窗口）
 - [x] 中/英切换，默认系统语言并持久化；页卡/覆盖层/统计随语言重建

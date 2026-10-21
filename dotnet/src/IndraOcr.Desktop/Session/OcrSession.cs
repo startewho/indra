@@ -37,8 +37,12 @@ public sealed class OcrSession : IDisposable
     public string? ModelDir => _modelDir;
 
     public static string DefaultModelDir()
-        => Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR")
-           ?? ModelFiles.CacheDir(IndraOcrInfo.ModelRevision);
+    {
+        string? env = Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR");
+        return string.IsNullOrWhiteSpace(env)
+            ? System.IO.Path.Combine(AppContext.BaseDirectory, "Data")
+            : env;
+    }
 
     public static bool ModelsPresent(string? folder, bool math)
     {
@@ -106,7 +110,8 @@ public sealed class OcrSession : IDisposable
     }
 
     /// <summary>Download (or verify) the models and return the folder that holds them.</summary>
-    public string ResolveModels(bool math) => ModelFiles.Resolve(_modelDir, math: math);
+    public string ResolveModels(bool math)
+        => ModelFiles.Resolve(_modelDir, math: math, allowDownload: true);
 
     private void EnsureModels(ReadOptions opts)
     {

@@ -31,17 +31,32 @@ public static class ModelFiles
     /// Folder with det.onnx, rec.onnx (or rec.int8.onnx) and meta.json.  Order of
     /// lookup: <paramref name="path"/>, INDRA_OCR_MODEL_DIR, then the cache (with a
     /// download on first use).  A local folder without order.onnx is accepted.
+    /// When <paramref name="allowDownload"/> is set, an explicit folder is filled
+    /// from Hugging Face instead of failing on missing files.
     /// </summary>
-    public static string Resolve(string? path = null, bool math = false, string? revision = null)
+    public static string Resolve(
+        string? path = null, bool math = false, string? revision = null, bool allowDownload = false)
     {
         string? explicitPath = path ?? Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR");
         if (!string.IsNullOrWhiteSpace(explicitPath))
         {
             string folder = Path.GetFullPath(explicitPath);
             var missing = Missing(folder, math);
-            if (missing.Count > 0)
+            if (missing.Count == 0)
+            {
+                return folder;
+            }
+            if (!allowDownload)
             {
                 throw new ModelException($"the model folder {folder} lacks {string.Join(", ", missing)}");
+            }
+            string explicitRevision = revision ?? Revision;
+            DownloadWithMessage(folder, explicitRevision, math);
+            var stillMissing = Missing(folder, math);
+            if (stillMissing.Count > 0)
+            {
+                throw new ModelException(
+                    $"the downloaded model folder {folder} lacks {string.Join(", ", stillMissing)}");
             }
             return folder;
         }
@@ -52,23 +67,28 @@ public static class ModelFiles
         {
             return cache;
         }
-        try
-        {
-            Download(cache, rev, math);
-        }
-        catch (Exception e) when (e is not ModelException)
-        {
-            throw new ModelException(
-                $"could not download the models from Hugging Face ({Repo}, {rev}): " +
-                $"{e.GetType().Name}: {FirstLine(e.Message)}. Check the network connection, or " +
-                "point at a local model folder with --model-dir or INDRA_OCR_MODEL_DIR.", e);
-        }
+        DownloadWithMessage(cache, rev, math);
         var still = Missing(cache, math);
         if (still.Count > 0)
         {
             throw new ModelException($"the downloaded model folder {cache} lacks {string.Join(", ", still)}");
         }
         return cache;
+    }
+
+    private static void DownloadWithMessage(string folder, string revision, bool math)
+    {
+        try
+        {
+            Download(folder, revision, math);
+        }
+        catch (Exception e) when (e is not ModelException)
+        {
+            throw new ModelException(
+                $"could not download the models from Hugging Face ({Repo}, {revision}): " +
+                $"{e.GetType().Name}: {FirstLine(e.Message)}. Check the network connection, or " +
+                "point at a local model folder with --model-dir or INDRA_OCR_MODEL_DIR.", e);
+        }
     }
 
     public static string CacheDir(string revision)

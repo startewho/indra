@@ -332,7 +332,8 @@ NativeAOT 需要：
 
 - .NET 10 SDK
 - Visual Studio Build Tools 的 MSVC C++ 工具链（`link.exe`）
-- Windows x64；输出约 165 MB（exe 约 20 MB + ONNX Runtime/OpenCV/PDFium/Skia 等原生库）
+- Windows x64；输出约 256 MB（exe + 原生库 + 约 92 MB 的 `Data` 模型目录）
+- 模型（v1.1.0，含数学）随 `Data` 目录发布，首次运行无需联网下载
 
 发布后也可以把一个文件作为参数直接打开：
 
@@ -352,10 +353,11 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 - **Source**：Auto / OCR / Text layer，切换后点 “重新读取”
 - **Pipeline**：Math as LaTeX、保留页眉页脚、OCR 图片内文字；DPI（150/200/300）；最大页数
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
-- **Model**：模型目录输入框、`选择目录…`、`下载模型`
-  - 目录留空：使用 `INDRA_OCR_MODEL_DIR`，否则使用本地缓存
-  - `下载模型`：下载或校验模型；勾选 Math 时连数学模型一起下载
-  - 首次读取时如果模型缺失，也会自动下载（状态栏显示进度）
+- **Model**：模型路径默认是应用程序目录下的 `Data`；发布包已自带 v1.1.0 核心模型和数学模型的离线副本
+  - 默认路径：`<IndraOcr.Desktop.exe 所在目录>\Data`；设置 `INDRA_OCR_MODEL_DIR` 可覆盖
+  - `选择目录…`：改用其他模型目录
+  - `下载模型`：下载/校验缺失文件到当前路径；勾选 Math 时连数学模型一起下载
+  - 首次读取时如果当前路径缺模型，也会自动下载（状态栏显示进度）；把应用放在只读目录时请改用可写目录
 - **RUN**：状态、每页耗时、pages/s、各阶段耗时
 - 每页卡片：
   - 页图 + 覆盖层（行框 / 版面块 / 标签 / 阅读序）

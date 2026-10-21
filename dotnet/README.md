@@ -153,10 +153,13 @@ selects the matching row (both directions). Pages appear as they finish.
 
 The UI follows the system language (English or Chinese) and can be switched in
 the top bar; the choice is remembered. While a document is being read, a
-spinning overlay covers the window and blocks input. The model path can be
-typed, chosen with a folder picker, or left empty to use
-`INDRA_OCR_MODEL_DIR` / the cache; `Download` fetches or verifies the models
-(including the math models when Math is on). Tesseract comparison is disabled.
+spinning overlay covers the window and blocks input. The default model path is
+`Data` next to the executable; the folder ships with the v1.1.0 core and math
+models (OpenRAIL-M, see `Data/LICENSE`), so the desktop app works offline. The
+path can be typed, chosen with a folder picker, or overridden with
+`INDRA_OCR_MODEL_DIR`; `Download` fetches or verifies models into the displayed
+folder, and the first read downloads anything missing. Tesseract comparison is
+disabled.
 
 ### NativeAOT publish
 
@@ -165,16 +168,18 @@ The desktop app ships as a NativeAOT executable:
 ```shell
 pwsh ./publish-desktop.ps1
 # -> dist/desktop/IndraOcr.Desktop.exe
+#    dist/desktop/Data/  (bundled models)
 ```
 
 The script rebuilds first and then publishes with `--no-build`. Avalonia
 compiles XAML from `CoreCompile`; an incremental `dotnet publish` can skip that
 step and produce an AOT image without compiled XAML. Plain `dotnet publish` is
 therefore a managed build, not an AOT one. NativeAOT needs the MSVC C++ build
-tools (`link.exe`) and takes a few minutes; the output is about 165 MB because
-ONNX Runtime, OpenCV, PDFium and Skia ship as native libraries. ILC reports two
-trim warnings from unused `OpenCvSharp.Mat.Cast<T>`/`Get<T>` helpers; the paths
-used by Indra OCR are AOT-safe and were verified with a real OCR run.
+tools (`link.exe`) and takes a few minutes; the output is about 256 MB because
+ONNX Runtime, OpenCV, PDFium, Skia and the 92 MB model folder ship alongside the
+executable. ILC reports two trim warnings from unused
+`OpenCvSharp.Mat.Cast<T>`/`Get<T>` helpers; the paths used by Indra OCR are
+AOT-safe and were verified with a real offline OCR run.
 
 
 ## Native dependencies

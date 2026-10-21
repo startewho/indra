@@ -14,6 +14,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $project = Join-Path $PSScriptRoot "src\IndraOcr.Desktop"
+$data = Join-Path $project "Data"
+if (-not (Test-Path (Join-Path $data "det.onnx"))) {
+    throw "Bundled models are missing: $data"
+}
 
 Write-Host "Building (NativeAOT preparation)..."
 dotnet build $project -c Release -r win-x64 -t:Rebuild -p:IndraNativeAot=true --nologo
@@ -34,5 +38,13 @@ if ($LASTEXITCODE -ne 0) {
 # Symbols are not needed for the shipped app (and are large for AOT builds).
 Get-ChildItem $Output -Filter "*.pdb" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
+# CopyToPublishDirectory handles this normally; keep a fallback so a publish
+# with --no-build can never ship an executable without its models.
+$publishedData = Join-Path $Output "Data"
+if (-not (Test-Path (Join-Path $publishedData "det.onnx"))) {
+    Copy-Item $data $publishedData -Recurse -Force
+}
+
 $exe = Join-Path $Output "IndraOcr.Desktop.exe"
 Write-Host "NativeAOT executable: $exe"
+Write-Host "Bundled models: $(Join-Path $Output 'Data')"
