@@ -206,7 +206,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 | **S3 版面+输出** ✅ | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON、倾斜/转向 | `Page` 全字段 + Markdown；`OrtOcr.Read` | 10 页整页对齐：Markdown/lines/blocks/rotation/skew 100% 一致 | 3–4 |
 | **S4 PDF** ✅ | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式、混合页与密码 | `Converter.Convert` | 渲染逐像素一致；6 页 PDF × auto/text/ocr 与参考端全字段一致 | 4–6 |
 | **S5 数学** ✅ | `mathcls` + 编码器 + KV-cache 解码器、`Detokenize`、PDF 文字层数学行重读 | `MathReader` + pipeline/document 接入 | 3 页判定/读数一致；`equations.png` 整页 LaTeX 输出一致 | 2–4 |
-| **S6 CLI+并行** | 参数、退出码、`--out` 命名规则、多核调度、错误页 | `indra-ocr` 等价 CLI | 现有 CLI 测试全绿 | 2–3 |
+| **S6 CLI+并行** ✅ | 参数、退出码、`--out` 命名规则、多核分页、错误隔离、UTF-8/换行 | `indra-ocr` 等价 CLI；`PageRunner` | md 与 Python **逐字节一致**；JSON 语义一致；cores=1/4 输出相同 | 2–3 |
 | **S7 Viewer** | Minimal API + 原 HTML/JS（`viewer.py` 的 `PAGE` 原样复用） | 本地查看器 | 与现有 viewer 功能对齐 | 2–3 |
 | **S8 收尾** | 跨平台原生库、NuGet 打包、文档、性能基线 | 可发布的包 | 见 §4 验收 | 2–4 |
 
@@ -223,7 +223,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
 
-### 3.2 进展记录（S1–S5 已完成，2026-10-21）
+### 3.2 进展记录（S1–S6 已完成，2026-10-21）
 
 **S1 基础设施**（`dotnet/src/IndraOcr/`）：
 
@@ -307,13 +307,33 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 文字层替换逻辑有函数级测试（构造 3 元组 token，验证 `$` + 置信度门槛、保留首个内容索引）
 - 数学模型随 `ModelFiles.Resolve(math: true)` 下载并校验
 
+**S6 CLI+并行**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `Parallel/PageRunner.cs` | `parallel.py` | `convert_many`：输入顺序、错误隔离、分页并行、每线程独立 PDF 文档 |
+| `src/IndraOcr.Cli/Cli.cs` | `cli.py` | 参数、格式、`--out`、退出码、stderr 文案 |
+| `src/IndraOcr.Cli/JsonOutput.cs` | `--format json` | 与 Python 相同的字段与数值 |
+| `src/IndraOcr.Cli/Program.cs` | — | 显式 UTF-8 输出；Windows 换行与 Python 一致 |
+
+并行模型说明：Python 把所有文件的页放进一个进程池；本移植**逐文件**处理，文件内分页并行。这样保留“一个大 PDF 用满所有核”，多个小文件则串行（后续可改为有界并行 + 有序输出）。ONNX Runtime 会话共享；PDFium 非线程安全，每线程一个文档且调用串行化。
+
+结果：
+
+- `--format md` 与 Python CLI **逐字节相同**（UTF-8、Windows CRLF、末尾换行）
+- `--format json` 除 `timings` 外字段语义完全一致（box 按 1 位小数输出）
+- `multipage.pdf`（4 页）在 `cores=1` 与 `cores=4` 下输出相同，且与 Python 黄金数据一致
+- 参数错误退出 2；输入失败/模型错误退出 1；`--out` 重名生成 `_2`
+- 61 个测试全部通过
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
 - 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
 - `table_heads=True` 的表头路径（Python 的公开 `load()` 未暴露该开关）
-- 真实 PDF 文字层数学行（合成 Helvetica 页未被分类器命中；替换逻辑已用函数级测试覆盖）
+- 真实 PDF 文字层数学行（合成 Helvetica 页未被分类器命中；替换级测试已覆盖）
+- 多文件之间的并行（当前逐文件 + 文件内分页并行）
 
 
 
@@ -516,7 +536,7 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S5）
+## 9. 里程碑检查清单（S0–S6）
 
 S0 已完成：
 
@@ -578,3 +598,12 @@ S5 已完成：
 - [x] `equations.png` 整页 `--math` 输出与参考端一致（含 LaTeX）
 - [x] 数学模型按需下载并校验（`math_meta.json` + 4 个 onnx）
 - [ ] 真实 PDF 文字层数学行（分类器在合成 Helvetica 页未命中；函数级测试已覆盖替换逻辑）
+S6 已完成：
+
+- [x] `PageRunner.ConvertMany`：输入顺序、错误隔离、`max_pages`、密码
+- [x] 并行分页：共享 ONNX 会话，每线程独立 PDF 文档；<4 页或 1 核时回到单页多线程
+- [x] 同一 PDF 在 `cores=1` 与 `cores=4` 下输出一致，且与 Python 黄金数据一致
+- [x] CLI 全部选项：`--out/--format/--mode/--no-image-ocr/--model-dir/--cores/--dpi/--max-pages/--password/--math/--keep-furniture/--timings/--version`
+- [x] 退出码：0 / 1（输入失败、模型错误）/ 2（参数错误）；stderr 文案与参考一致
+- [x] `--out` 重名 `_2`、`_3`；UTF-8 输出；Windows 换行与 Python 一致
+- [x] `--format md` 与 Python 逐字节相同；`--format json` 字段语义相同（timings 除外）

@@ -21,7 +21,8 @@ dotnet/
     Pdf/                   # PDFium P/Invoke, document/page/text page
     TextLayer/             # text-layer runs and trust checks
     Document/              # Converter: auto / ocr / text PDF modes
-  src/IndraOcr.Cli/        # indra-ocr equivalent (S6)
+    Parallel/              # convert_many: pages across cores
+  src/IndraOcr.Cli/        # indra-ocr equivalent
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent (S7)
   tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
   tests/parity/            # golden data, artifacts, PDFs, fixtures
@@ -75,10 +76,29 @@ python tools/dump_golden.py --mode ocr  --out dotnet/tests/parity/golden-pdf/ocr
 and small fixtures are checked in.
 
 Rules: text / reading order / markdown / `note` / `source` must match exactly;
-boxes within 0.5 px, confidences within 1e-4, detector tensors within 1e-6, line
+boxes within 0.5 px, confidences within 1e-4 (page lines are rounded to 4
+decimals, so one display step is allowed), detector tensors within 1e-6, line
 crops byte for byte, PDF renders by SHA-256.
 
-What the tests cover (S1–S5):
+## CLI
+
+```shell
+dotnet run --project src/IndraOcr.Cli -- paper.pdf                 # markdown to stdout
+dotnet run --project src/IndraOcr.Cli -- *.pdf --out results/      # one .md per input
+dotnet run --project src/IndraOcr.Cli -- scan.png --format json    # lines, boxes, layout
+dotnet run --project src/IndraOcr.Cli -- paper.pdf --math --timings
+```
+
+Options mirror `indra-ocr`: `--out`, `--format md|text|json`, `--mode
+auto|ocr|text`, `--no-image-ocr`, `--model-dir`, `--cores`, `--dpi`,
+`--max-pages`, `--password`, `--math`, `--keep-furniture`, `--timings`,
+`--version`. Exit codes: 0 ok, 1 an input or the models failed, 2 bad arguments.
+
+`--format md` output is byte-identical to the Python CLI (UTF-8, platform line
+endings); JSON matches field by field except `timings`. Pages of one file run in
+parallel; files are processed one at a time, in input order.
+
+What the tests cover (S1–S6):
 
 - detector input/output/boxes, adaptive second pass
 - line crops (32 px and 96 px window), CTC output, script routing, confidence
@@ -88,6 +108,8 @@ What the tests cover (S1–S5):
   modes, hybrid pages, passwords, multi-frame TIFF and input errors
 - math line classification, attention decoding with KV cache, LaTeX output on
   whole pages, and the PDF text-layer math replacement
+- CLI options, formats, output naming, exit codes, UTF-8/newlines, parallel page
+  conversion and error isolation
 
 Not covered yet: the optional `mask.onnx`, det's picture channel, real vertical
 pages, `table_heads=True`, and a real PDF whose text-layer math lines the

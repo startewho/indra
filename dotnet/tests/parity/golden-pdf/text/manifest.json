@@ -27,6 +27,26 @@
     "bytes": 11641215,
     "sha256": "34df5e74a2fcbb9cf5e7f360a559375ffa2e04d2d2943a42308c177bcb444d5d"
    },
+   "math_dec_init.onnx": {
+    "bytes": 1356364,
+    "sha256": "919417fde9962c3318aeb478c1fe3955dd2bb8cd34476c68debed2ba39e5dcd6"
+   },
+   "math_dec_step.onnx": {
+    "bytes": 8429418,
+    "sha256": "5ff6e6cbaf0dea70314f66222a1469736a8c5e7994fab06a5b4e53c90469239f"
+   },
+   "math_enc.onnx": {
+    "bytes": 9889575,
+    "sha256": "d4e4a6c40dad1ee988d32c6403b1590ca42864d4483bbe1e671c5dbb999a5a97"
+   },
+   "math_meta.json": {
+    "bytes": 7797,
+    "sha256": "85d9715fb8a77791b55ef89f57fb41e72eb3170ec58a7c3bee3b394268bf2b10"
+   },
+   "mathcls.onnx": {
+    "bytes": 191005,
+    "sha256": "818b1556e9ef337958db6be0c9791299d3f74a4575586b0cd469aaae9534ff96"
+   },
    "meta.json": {
     "bytes": 211869,
     "sha256": "4ce4c94b46f5d644033c02e718322014ff4081270f385038c571912b56696339"
@@ -73,7 +93,8 @@
   "dotnet\\tests\\parity\\pdfs\\sideways.pdf",
   "dotnet\\tests\\parity\\pdfs\\labels.pdf",
   "dotnet\\tests\\parity\\pdfs\\invisible.pdf",
-  "dotnet\\tests\\parity\\pdfs\\hybrid.pdf"
+  "dotnet\\tests\\parity\\pdfs\\hybrid.pdf",
+  "dotnet\\tests\\parity\\pdfs\\multipage.pdf"
  ],
  "pages": {
   "digital-13b97fe4": {
@@ -122,6 +143,27 @@
     {
      "index": 0,
      "record": "hybrid-9e9bd2fa/page-0000.json"
+    }
+   ]
+  },
+  "multipage-e5ca27bb": {
+   "input": "dotnet\\tests\\parity\\pdfs\\multipage.pdf",
+   "pages": [
+    {
+     "index": 0,
+     "record": "multipage-e5ca27bb/page-0000.json"
+    },
+    {
+     "index": 1,
+     "record": "multipage-e5ca27bb/page-0001.json"
+    },
+    {
+     "index": 2,
+     "record": "multipage-e5ca27bb/page-0002.json"
+    },
+    {
+     "index": 3,
+     "record": "multipage-e5ca27bb/page-0003.json"
     }
    ]
   }

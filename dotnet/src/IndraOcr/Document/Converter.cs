@@ -612,7 +612,7 @@ public sealed class Converter
             for (int i = 0; i < limit; i++)
             {
                 using var frame = frames[i];
-                yield return (i, Safe(() => _ocr.Read(frame)));
+                yield return (i, SafeRead(() => _ocr.Read(frame)));
             }
             foreach (var f in frames.Skip(limit))
             {
@@ -628,10 +628,7 @@ public sealed class Converter
         }
         catch (PdfiumException e)
         {
-            bool locked = e.Code == 4 || e.Message.Contains("password", StringComparison.OrdinalIgnoreCase);
-            throw new InputError(locked
-                ? $"{path}: password-protected PDF (pass password=, or --password)"
-                : $"{path}: cannot open the PDF ({e.Message})");
+            throw OpenError(path, e);
         }
         try
         {
@@ -639,7 +636,7 @@ public sealed class Converter
             for (int i = 0; i < n; i++)
             {
                 int index = i;
-                yield return (index, Safe(() => PdfPage(path, doc, index)));
+                yield return (index, SafeRead(() => PdfPage(path, doc, index)));
             }
         }
         finally
@@ -648,7 +645,7 @@ public sealed class Converter
         }
     }
 
-    private static Pipeline.Page Safe(Func<Pipeline.Page> read)
+    internal static Pipeline.Page SafeRead(Func<Pipeline.Page> read)
     {
         try
         {
@@ -664,6 +661,15 @@ public sealed class Converter
                 Timings = { ["total_ms"] = 0.0 },
             };
         }
+    }
+
+    /// <summary>The InputError message for a document PDFium refused to open.</summary>
+    internal static InputError OpenError(string path, PdfiumException e)
+    {
+        bool locked = e.Code == 4 || e.Message.Contains("password", StringComparison.OrdinalIgnoreCase);
+        return new InputError(locked
+            ? $"{path}: password-protected PDF (pass password=, or --password)"
+            : $"{path}: cannot open the PDF ({e.Message})");
     }
 
     /// <summary>The file's own bytes say PDF (the header may follow a little junk).</summary>

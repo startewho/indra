@@ -39,7 +39,10 @@ internal static class PageComparison
             var l = page.Lines[i];
             Assert.True(g.Text == l.Text,
                 $"{name} line {i} text: expected '{g.Text}', got '{l.Text}'");
-            Assert.True(Math.Abs(g.Conf - l.Conf) <= 1e-4,
+            // Page confidences are rounded to 4 decimals by both implementations;
+            // a last-bit difference in the float32 mean can land on either side of
+            // a rounding boundary, so allow one more display step.
+            Assert.True(Math.Abs(g.Conf - l.Conf) <= 2.5e-4,
                 $"{name} line {i} conf: expected {g.Conf}, got {l.Conf}");
             for (int k = 0; k < 4; k++)
             {

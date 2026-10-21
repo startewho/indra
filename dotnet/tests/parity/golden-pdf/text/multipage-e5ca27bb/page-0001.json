@@ -1,0 +1,94 @@
+{
+ "file": "dotnet/tests/parity/pdfs/multipage.pdf",
+ "page": 1,
+ "source": "text",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    198.9,
+    219.1,
+    548.7,
+    267.8
+   ],
+   "text": "Page 2 heading",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    197.3,
+    342.3,
+    730.9,
+    373.5
+   ],
+   "text": "Line 1 on page 2 of the parallel test.",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    197.3,
+    392.6,
+    730.8,
+    423.7
+   ],
+   "text": "Line 2 on page 2 of the parallel test.",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    197.4,
+    442.9,
+    730.8,
+    473.5
+   ],
+   "text": "Line 3 on page 2 of the parallel test.",
+   "conf": 1.0
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Section-Header",
+   "bbox": [
+    198.9,
+    219.1,
+    548.7,
+    267.8
+   ],
+   "text": "Page 2 heading"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.3,
+    342.3,
+    730.9,
+    373.5
+   ],
+   "text": "Line 1 on page 2 of the parallel test."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.3,
+    392.6,
+    730.8,
+    423.7
+   ],
+   "text": "Line 2 on page 2 of the parallel test."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.4,
+    442.9,
+    730.8,
+    473.5
+   ],
+   "text": "Line 3 on page 2 of the parallel test."
+  }
+ ],
+ "markdown": "## Page 2 heading\n\nLine 1 on page 2 of the parallel test.\n\nLine 2 on page 2 of the parallel test.\n\nLine 3 on page 2 of the parallel test."
+}

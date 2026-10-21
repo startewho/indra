@@ -99,6 +99,19 @@ def hybrid():
     jpg.unlink(missing_ok=True)
 
 
+def multipage():
+    """Four text pages, so the parallel page runner has work to spread."""
+    doc = pdfium.PdfDocument.new()
+    for p in range(4):
+        page = doc.new_page(612, 792)
+        add_text(doc, page, f"Page {p + 1} heading", 18, (1, 0, 0, 1, 72, 700))
+        for i in range(3):
+            add_text(doc, page, f"Line {i + 1} on page {p + 1} of the parallel test.", 12,
+                     (1, 0, 0, 1, 72, 660 - i * 18))
+        R.FPDFPage_GenerateContent(page.raw)
+    doc.save(str(OUT / "multipage.pdf"))
+
+
 def locked():
     """The same digital page, encrypted with the password "pw" (pikepdf)."""
     try:
@@ -117,6 +130,7 @@ def main(argv=None) -> int:
     labels()
     invisible()
     hybrid()
+    multipage()
     locked()
     for p in sorted(OUT.glob("*.pdf")):
         print(f"{p} {p.stat().st_size} bytes")
