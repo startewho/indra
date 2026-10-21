@@ -343,6 +343,23 @@ $env:HF_HUB_DISABLE_XET = "1"
 - Tesseract 对照未实现：`--tesseract` 会提示不可用，`/info.tesseract` 为 false
 - 全量测试 **67 passed**
 
+**桌面 GUI（Avalonia 12 + Semi Avalonia）**：
+
+| 文件 | 内容 |
+|---|---|
+| `src/IndraOcr.Desktop/Session/OcrSession.cs` | 打开文档、按选项读单页、模型缓存/下载、JPEG + 行/块 + JSON |
+| `src/IndraOcr.Desktop/Controls/PageOverlay.cs` | 页图叠加行框、版面块、标签、阅读序；行高亮 |
+| `src/IndraOcr.Desktop/Controls/MarkdownRenderer.cs` | 与 Web 相同的 Markdown 子集（标题/段落/列表/HTML 表格/LaTeX） |
+| `src/IndraOcr.Desktop/MainWindow.axaml(.cs)` | 仿 Web 布局：来源、管线、模型、显示开关、逐页卡片与 4 个标签页 |
+| `src/IndraOcr.Desktop/ViewerOptions/Program` | 启动、`--version`、可选初始文件 |
+
+结果：
+
+- 真实进程截图验证：150% DPI 下 1942×1286 物理窗口，左侧 300 DIP 侧栏、右侧页卡与覆盖层正常
+- 图像（scan.png）读取 36 行、9 blocks；PDF 旋转页、模型目录/下载、显示开关可用
+- 4 个 session 测试 + 全量 **71 passed**
+- 不支持 Tesseract 对照；一次只打开一个文档
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
@@ -635,3 +652,14 @@ S7 已完成：
 - [x] 图像/PDF/旋转页、非法 mode、坏文件、未知文档、HTTP 错误 400
 - [x] `--port/--threads/--dpi/--max-pages/--mode/--no-image-ocr/--keep-furniture/--math/--model-dir/--version`
 - [ ] Tesseract 对照（C# viewer 不提供；`--tesseract` 会提示不可用）
+
+桌面 GUI 已完成：
+
+- [x] Avalonia 12 + Semi Avalonia，布局仿 Web 查看器
+- [x] 页图覆盖层：行框、版面块、块标签、阅读序、行高亮
+- [x] 逐页读取、4 个标签页（Preview/Markdown/Lines/JSON）
+- [x] 模型目录输入/选择/下载（含 math）；首次读取自动下载
+- [x] 来源/管线/DPI/最大页数/显示开关；真实文件与拖放打开
+- [x] 高 DPI 适配（PerMonitorV2 manifest + 按可用屏幕收敛窗口）
+- [x] 4 个 session 测试；全量 71 passed
+- [ ] Tesseract 对照（与 Web viewer 相同，未实现）

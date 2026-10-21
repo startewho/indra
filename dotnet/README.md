@@ -3,6 +3,7 @@
 A 1:1 structural port of the Python package in this repository (`indra_ocr/`).
 The plan, stage list and parity rules live in
 [`docs/PORT_TO_CSHARP.md`](../docs/PORT_TO_CSHARP.md).
+Usage guide (Chinese): [`USAGE.md`](USAGE.md).
 
 ```
 dotnet/
@@ -24,6 +25,7 @@ dotnet/
     Parallel/              # convert_many: pages across cores
   src/IndraOcr.Cli/        # indra-ocr equivalent
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent
+  src/IndraOcr.Desktop/    # Avalonia + Semi Avalonia desktop app
   tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
   tests/parity/            # golden data, artifacts, PDFs, fixtures
 ```
@@ -112,6 +114,7 @@ What the tests cover (S1–S7):
   conversion and error isolation
 - viewer engine and HTTP routes: upload/page/info, image and PDF pages, options
   and error responses
+- desktop session: document open, per-page reads, model presence and JSON output
 
 Not covered yet: the optional `mask.onnx`, det's picture channel, real vertical
 pages, `table_heads=True`, a real PDF whose text-layer math lines the classifier
@@ -134,6 +137,23 @@ The routes and response fields match `viewer.py` (`/`, `/info`, `/upload`,
 Tesseract comparison is not implemented (`--tesseract` reports it as
 unavailable).
 
+## Desktop app
+
+```shell
+dotnet run --project src/IndraOcr.Desktop
+# or: src/IndraOcr.Desktop/bin/Debug/net10.0/IndraOcr.Desktop.exe paper.pdf
+```
+
+Avalonia 12 + Semi Avalonia, laid out like the web viewer: file drop/choose on
+the left, pipeline options, model folder + download, display toggles and run
+stats; each page shows the image with line boxes, layout blocks, labels and
+reading order, plus Preview / Markdown / Lines / JSON tabs. Hovering a line in
+the list highlights its box. Pages appear as they finish.
+
+The model path can be typed, chosen with a folder picker, or left empty to use
+`INDRA_OCR_MODEL_DIR` / the cache; `Download` fetches or verifies the models
+(including the math models when Math is on). Tesseract comparison is disabled.
+
 ## Native dependencies
 
 | Package | Purpose |
@@ -141,3 +161,4 @@ unavailable).
 | `Microsoft.ML.OnnxRuntime` 1.31.0 | inference (same runtime as the Python package) |
 | `OpenCvSharp4` + `OpenCvSharp4.runtime.win` 4.13.0 | OpenCV (matches `opencv-python-headless` 4.13) |
 | `bblanchon.PDFium.Win32` **156.0.8076** | PDFium, pinned to the build `pypdfium2` bundles (pixel-exact renders) |
+| `Avalonia` 12.1.4 + `Semi.Avalonia` 12.1.0.1 | desktop UI |

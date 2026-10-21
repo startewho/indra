@@ -1,0 +1,233 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1360" d:DesignHeight="900"
+        x:Class="IndraOcr.Desktop.MainWindow"
+        Title="Indra OCR · Datalab"
+        Width="1280" Height="820" MinWidth="980" MinHeight="540"
+        Background="#FAFAFC"
+        FontSize="14">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="#6B7280" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#1D4ED8" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Border#DropZone:pointerover">
+            <Setter Property="BorderBrush" Value="#1D4ED8" />
+            <Setter Property="Background" Value="#EEF2FF" />
+        </Style>
+        <Style Selector="ToggleButton.segment">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="6,7" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+        <Style Selector="TextBlock.mono">
+            <Setter Property="FontFamily" Value="Consolas" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="#FFFFFF"
+                BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+            <Grid Height="56" Margin="24,0" ColumnDefinitions="Auto,Auto,*,Auto">
+                <Image Grid.Column="0" Width="30" Height="30" VerticalAlignment="Center"
+                       Source="avares://IndraOcr.Desktop/Assets/datalab-logo.png" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                            VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="Datalab" FontWeight="SemiBold" />
+                    <TextBlock Text="/" Foreground="#9CA3AF" />
+                    <TextBlock Text="Indra OCR" FontWeight="Medium" />
+                    <Border Background="#F3F4F6" CornerRadius="999" Padding="8,2" Margin="6,0,0,0">
+                        <TextBlock x:Name="VersionText" FontFamily="Consolas" FontSize="11"
+                                   Foreground="#4B5563" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="18"
+                            VerticalAlignment="Center">
+                    <Button Classes="link" Content="GitHub" Click="OnOpenGithub" />
+                    <Button Classes="link" Content="Models" Click="OnOpenModels" />
+                    <Button Content="Try Chandra on Datalab" Background="#1D4ED8" Foreground="White"
+                            CornerRadius="6" Padding="12,6" Click="OnOpenChandra" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid ColumnDefinitions="300,*">
+            <Border Grid.Column="0" Background="#FCFCFD"
+                    BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="20" Spacing="18">
+
+                        <StackPanel Spacing="8">
+                            <Border x:Name="DropZone" Background="#F5F7FF" BorderBrush="#C7CEEA"
+                                    BorderThickness="1" CornerRadius="10" Padding="18,18"
+                                    Cursor="Hand" PointerPressed="OnChooseFile">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Drop a PDF or an image" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="or click to choose a file" FontSize="12"
+                                               Foreground="#6B7280" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="FileNameText" FontFamily="Consolas" FontSize="12"
+                                       Foreground="#4B5563" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="caption" Text="SOURCE" />
+                            <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="7"
+                                    ClipToBounds="True">
+                                <Grid ColumnDefinitions="*,*,*">
+                                    <ToggleButton x:Name="ModeAuto" Grid.Column="0" Classes="segment"
+                                                  Content="Auto" IsChecked="True" Click="OnModeChanged" />
+                                    <ToggleButton x:Name="ModeOcr" Grid.Column="1" Classes="segment"
+                                                  Content="OCR" Click="OnModeChanged" />
+                                    <ToggleButton x:Name="ModeText" Grid.Column="2" Classes="segment"
+                                                  Content="Text layer" Click="OnModeChanged" />
+                                </Grid>
+                            </Border>
+                            <TextBlock x:Name="ModeHint" FontSize="12" Foreground="#6B7280"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="caption" Text="PIPELINE" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Math as LaTeX" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="MathSwitch" OnContent=""
+                                              OffContent="" IsCheckedChanged="OnMathChanged" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Keep headers and footers" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="FurnitureSwitch"
+                                              OnContent="" OffContent="" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="OCR text inside images" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="ImageOcrSwitch"
+                                              OnContent="" OffContent="" IsChecked="True" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Compare with Tesseract" VerticalAlignment="Center"
+                                           Foreground="#9CA3AF" />
+                                <ToggleSwitch Grid.Column="1" IsEnabled="False" OnContent=""
+                                              OffContent="" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock Classes="caption" Text="DPI" />
+                                    <ComboBox x:Name="DpiBox" SelectedIndex="1"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="150" />
+                                        <ComboBoxItem Content="200" />
+                                        <ComboBoxItem Content="300" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Classes="caption" Text="MAX PAGES" />
+                                    <NumericUpDown x:Name="MaxPagesBox" Value="20" Minimum="1"
+                                                   Maximum="10000" Increment="1"
+                                                   HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                            </Grid>
+                            <Button x:Name="RerunButton" Content="Read again with these options"
+                                    Background="#1D4ED8" Foreground="White" CornerRadius="7"
+                                    Padding="10,8" HorizontalAlignment="Stretch"
+                                    IsEnabled="False" Click="OnRerun" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="caption" Text="MODEL" />
+                            <TextBox x:Name="ModelPathBox" PlaceholderText="留空则自动下载到缓存"
+                                     FontFamily="Consolas" FontSize="12" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Grid.Column="0" Content="Choose folder..." HorizontalAlignment="Stretch"
+                                        Click="OnBrowseModel" />
+                                <Button Grid.Column="1" x:Name="DownloadButton" Content="Download"
+                                        HorizontalAlignment="Stretch" Click="OnDownloadModels" />
+                            </Grid>
+                            <TextBlock x:Name="ModelStatusText" FontSize="12" Foreground="#6B7280"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="caption" Text="SHOW" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Lines" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="ShowLinesSwitch" OnContent=""
+                                              OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Layout blocks" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="ShowBlocksSwitch" OnContent=""
+                                              OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Block labels" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="ShowLabelsSwitch" OnContent=""
+                                              OffContent="" IsChecked="True" IsCheckedChanged="OnDisplayChanged" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Reading order" VerticalAlignment="Center" />
+                                <ToggleSwitch Grid.Column="1" x:Name="ShowOrderSwitch" OnContent=""
+                                              OffContent="" IsCheckedChanged="OnDisplayChanged" />
+                            </Grid>
+                            <WrapPanel x:Name="LegendPanel" Margin="0,4,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="caption" Text="RUN" />
+                            <ProgressBar x:Name="BusyBar" IsIndeterminate="True" Height="3"
+                                         IsVisible="False" />
+                            <TextBlock x:Name="StatusText" FontFamily="Consolas" FontSize="12"
+                                       Foreground="#6B7280" TextWrapping="Wrap" />
+                            <TextBlock x:Name="StatsText" FontFamily="Consolas" FontSize="12"
+                                       Foreground="#374151" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10"
+                                Background="#F7F8FA" Padding="12">
+                            <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="#4B5563">
+                                Need handwriting, math and tables at the highest accuracy?
+                                <Run Foreground="#1D4ED8">Chandra on Datalab</Run> reads them,
+                                with $5 in free credits to start.
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <Border Grid.Column="1" Background="#FAFAFC">
+                <ScrollViewer x:Name="PagesScroll" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="PagesPanel" Margin="24" Spacing="24">
+                        <Border x:Name="EmptyState" BorderBrush="#D1D5DB" BorderThickness="1"
+                                CornerRadius="14" Padding="64,64" Background="#FCFCFD">
+                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                <TextBlock Text="Read a document" FontSize="22" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="Drop a PDF or an image on the left. Pages appear as they finish, with lines, layout blocks and reading order drawn over each page."
+                                           Foreground="#6B7280" TextWrapping="Wrap"
+                                           MaxWidth="560" TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\IndraOcr\IndraOcr.csproj" />
     <ProjectReference Include="..\..\src\IndraOcr.Cli\IndraOcr.Cli.csproj" />
     <ProjectReference Include="..\..\src\IndraOcr.Viewer\IndraOcr.Viewer.csproj" />
+    <ProjectReference Include="..\..\src\IndraOcr.Desktop\IndraOcr.Desktop.csproj" />
   </ItemGroup>
 
 </Project>
