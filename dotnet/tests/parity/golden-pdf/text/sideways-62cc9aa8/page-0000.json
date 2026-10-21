@@ -1,0 +1,64 @@
+{
+ "file": "dotnet/tests/parity/pdfs/sideways.pdf",
+ "page": 0,
+ "source": "text",
+ "rotation": 90,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    275.5,
+    253.3,
+    747.1,
+    278.5
+   ],
+   "text": "Table 2 Baseline characteristics",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    274.6,
+    336.7,
+    477.3,
+    368.0
+   ],
+   "text": "Age 54 years",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    274.8,
+    419.1,
+    563.1,
+    449.2
+   ],
+   "text": "Women 61 percent",
+   "conf": 1.0
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Text",
+   "bbox": [
+    275.5,
+    253.3,
+    747.1,
+    278.5
+   ],
+   "text": "Table 2 Baseline characteristics"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    274.6,
+    336.7,
+    563.1,
+    449.2
+   ],
+   "text": "Age 54 years\nWomen 61 percent"
+  }
+ ],
+ "markdown": "Table 2 Baseline characteristics\n\nAge 54 years Women 61 percent"
+}

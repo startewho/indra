@@ -204,7 +204,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 | **S1 基础设施** ✅ | `Np`（argsort/searchsorted/bincount/percentile/logaddexp/cumsum/median/triu/matmul）、Unicode 表生成器、`NpzReader`、ONNX 会话封装、图像 IO（PNG/JPEG/TIFF 多帧） | `Numerics/`、`Imaging/`、`Models/`；Unicode 表；`tools/gen_unicode_tables.py` | 每个 helper 有 numpy 基准用例，浮点误差 ≤1e-6 | 2–3 |
 | **S2 检测+识别** ✅ | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别；**LM beam search 提前到本阶段**（默认模型必用） | `OrtOcr.Detect/Recognize`、`NgramLm`、`BeamSearch` | 10 页样本（暗底/90°/270°/7°/微小字/中英阿希）：box ≤0.5px，文本/ids/路由 100% 一致，裁剪逐字节相同 | 3–4 |
 | **S3 版面+输出** ✅ | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON、倾斜/转向 | `Page` 全字段 + Markdown；`OrtOcr.Read` | 10 页整页对齐：Markdown/lines/blocks/rotation/skew 100% 一致 | 3–4 |
-| **S4 PDF** | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式 | `Converter.Convert` | 数字版 PDF 的 `source/note/rotation/skew/vertical` 与文本全部一致 | 4–6 |
+| **S4 PDF** ✅ | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式、混合页与密码 | `Converter.Convert` | 渲染逐像素一致；6 页 PDF × auto/text/ocr 与参考端全字段一致 | 4–6 |
 | **S5 可选模型** | `math` 自回归解码（`lm`/`script`/`orient` 已在 S2/S3 完成） | 数学能力 | 含数学页与参考端同结果 | 2–4 |
 | **S6 CLI+并行** | 参数、退出码、`--out` 命名规则、多核调度、错误页 | `indra-ocr` 等价 CLI | 现有 CLI 测试全绿 | 2–3 |
 | **S7 Viewer** | Minimal API + 原 HTML/JS（`viewer.py` 的 `PAGE` 原样复用） | 本地查看器 | 与现有 viewer 功能对齐 | 2–3 |
@@ -223,7 +223,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
 
-### 3.2 进展记录（S1–S3 已完成，2026-10-20）
+### 3.2 进展记录（S1–S4 已完成，2026-10-21）
 
 **S1 基础设施**（`dotnet/src/IndraOcr/`）：
 
@@ -270,13 +270,33 @@ $env:HF_HUB_DISABLE_XET = "1"
 
 纯函数另有 `tools/dump_stage_fixtures.py` 产出的 JSON 夹具（bidi、17 行版面的特征/XY-cut/聚类/排序、`join_lines`、`table_html`），3 个测试逐项对齐。
 
+**S4 PDF**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `Pdf/PdfiumNative.cs` | `pypdfium2.raw` | 直接用 P/Invoke；原生库固定 **156.0.8076**（与 pypdfium2 内置版本一致） |
+| `Pdf/PdfDocument.cs` | `PdfDocument`/`PdfPage` | 打开/密码、尺寸/旋转、灰度渲染、文字页、对象遍历（含 Form 递归） |
+| `TextLayer/TextLayer.cs` | `textlayer.py` | 字符坐标/角度、仿射、quarter 判断、run 切分、可信度判定 |
+| `Document/Converter.cs` | `document.py` | `auto`/`ocr`/`text`、`image_ocr`、像素上限、密码、混合页、侧向 run |
+| `tools/make_pdfs.py` | — | 数字页、`/Rotate 90`、侧向表格、不可见文字层、图像+文字混合页、加密页 |
+| `tools/dump_pdf_fixtures.py` | — | 渲染 SHA-256（3 种 scale）、文字层结构、`page_turn` |
+
+结果：
+
+- PDFium 渲染与 pypdfium2 **逐像素相同**（SHA-256），三种 scale、含 `/Rotate 90`
+- 文字层：run/字符框/文本/quarter/seq、`trusted`/`reason`、全部 `stats` 与 Python 一致
+- 6 页 PDF（含混合页与加密页）× 3 种 mode 的整页输出与参考端全字段一致
+- 混合页：`source=hybrid`，图像内的行由 OCR 补齐；`image_ocr=false` 时只保留文字层（1 行）
+- 加密页：无密码报 `password-protected PDF`，`password="pw"` 可读
+- 多帧 TIFF、`max_pages`、不可读文件、缺失文件均有测试
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
 - 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
 - `table_heads=True` 的表头路径（Python 的公开 `load()` 未暴露该开关）
-- `math` 自回归解码、PDF 文字层（S4/S5）
+- `math` 自回归解码（S5）；PDF 文字层的数学行重读也依赖它
 
 
 
@@ -479,7 +499,7 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S3）
+## 9. 里程碑检查清单（S0–S4）
 
 S0 已完成：
 
@@ -522,3 +542,13 @@ S3 已完成：
 - [ ] 真实竖排页（合成页被 orient 判为 270°，VERTICAL 分支待样本）
 - [ ] 图片区（`Picture` block / `![](picture-k)`）待真实图文页
 - [ ] `table_heads=True` 路径（公开 API 未暴露）
+S4 已完成：
+
+- [x] PDFium P/Invoke（固定 156.0.8076，与 pypdfium2 同版本）
+- [x] 灰度渲染与 pypdfium2 逐像素一致（3 种 scale，含 /Rotate 90）
+- [x] 文字层 run/字符框/角度/quarter/可信度判定与 Python 一致
+- [x] `Converter` 三模式：auto/text/ocr；6 页 PDF × 3 模式整页输出一致
+- [x] 混合页（source=hybrid）与 `image_ocr=false`
+- [x] 加密 PDF、密码错误、多帧 TIFF、max_pages、不可读/缺失文件
+- [ ] `math=True` 的 PDF 数学行重读（S5）
+- [ ] 多线程 PDF 文档缓存（S6，pdfium 非线程安全）

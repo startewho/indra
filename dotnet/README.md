@@ -17,10 +17,13 @@ dotnet/
     Layout/                # blocks, tables, markdown
     Rtl/                   # Unicode bidi subset (flip)
     Lm/                    # n-gram LM + CTC beam search
+    Pdf/                   # PDFium P/Invoke, document/page/text page
+    TextLayer/             # text-layer runs and trust checks
+    Document/              # Converter: auto / ocr / text PDF modes
   src/IndraOcr.Cli/        # indra-ocr equivalent (S6)
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent (S7)
   tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
-  tests/parity/            # golden data, detector/recognizer artifacts, LM fixture
+  tests/parity/            # golden data, artifacts, PDFs, fixtures
 ```
 
 ## Build and test
@@ -48,28 +51,42 @@ Reference data always comes from the Python implementation, never from the port.
 ```shell
 # from the repository root (needs the Python env from the plan, section 2.3)
 python tools/make_samples.py                                   # synthetic pages
+python tools/make_pdfs.py                                      # digital / rotated / hybrid / locked PDFs
 python tools/dump_golden.py   --out dotnet/tests/parity/golden examples/samples/scan.png
 python tools/dump_artifacts.py --out dotnet/tests/parity/artifacts <pages...>
 python tools/dump_lm_fixture.py                                # LM + beam fixture
+python tools/dump_stage_fixtures.py                            # bidi / order / layout
+python tools/dump_pdf_fixtures.py                              # render hashes + text layers
 python tools/compare_golden.py dotnet/tests/parity/golden dotnet/tests/parity/actual
 ```
 
+PDF page goldens are produced per mode:
+
+```shell
+python tools/dump_golden.py --mode auto --out dotnet/tests/parity/golden-pdf/auto dotnet/tests/parity/pdfs/*.pdf
+python tools/dump_golden.py --mode text --out dotnet/tests/parity/golden-pdf/text dotnet/tests/parity/pdfs/*.pdf
+python tools/dump_golden.py --mode ocr  --out dotnet/tests/parity/golden-pdf/ocr  dotnet/tests/parity/pdfs/*.pdf
+```
+
 `tests/parity/artifacts/` is gitignored (about 40 MB); regenerate it with
-`dump_artifacts.py` after a fresh clone. The golden page JSON and the small LM
-fixture are checked in.
+`dump_artifacts.py` after a fresh clone. The golden page JSON, PDFs, TIFF input
+and small fixtures are checked in.
 
 Rules: text / reading order / markdown / `note` / `source` must match exactly;
 boxes within 0.5 px, confidences within 1e-4, detector tensors within 1e-6, line
-crops byte for byte.
+crops byte for byte, PDF renders by SHA-256.
 
-What the current tests cover (S1–S3): detector input/output/boxes, adaptive
-second pass, line crops (32 px and 96 px window), CTC output, script routing,
-confidence competition, LM log-probabilities and beam search, page orientation
-and deskew, reading order, layout blocks and markdown.
+What the tests cover (S1–S4):
 
-```shell
-python tools/dump_stage_fixtures.py    # bidi / order / layout pure functions
-```
+- detector input/output/boxes, adaptive second pass
+- line crops (32 px and 96 px window), CTC output, script routing, confidence
+  competition, LM log-probabilities and beam search
+- page orientation, deskew, reading order, layout blocks and markdown
+- PDFium rendering, text-layer runs and trust verdicts, all three Converter
+  modes, hybrid pages, passwords, multi-frame TIFF and input errors
+
+Not covered yet: the optional `mask.onnx`, det's picture channel, real vertical
+pages, `table_heads=True`, and math (S5).
 
 ## Native dependencies
 
@@ -77,4 +94,4 @@ python tools/dump_stage_fixtures.py    # bidi / order / layout pure functions
 |---|---|
 | `Microsoft.ML.OnnxRuntime` 1.31.0 | inference (same runtime as the Python package) |
 | `OpenCvSharp4` + `OpenCvSharp4.runtime.win` 4.13.0 | OpenCV (matches `opencv-python-headless` 4.13) |
-| PDFium native binaries | added at S4 (`bblanchon.PDFium.Win32`) |
+| `bblanchon.PDFium.Win32` **156.0.8076** | PDFium, pinned to the build `pypdfium2` bundles (pixel-exact renders) |

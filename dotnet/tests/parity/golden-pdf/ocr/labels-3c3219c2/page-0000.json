@@ -1,0 +1,84 @@
+{
+ "file": "dotnet/tests/parity/pdfs/labels.pdf",
+ "page": 0,
+ "source": "ocr",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "mode=ocr; order=model",
+ "lines": [
+  {
+   "box": [
+    201.6,
+    231.8,
+    455.8,
+    262.6
+   ],
+   "text": "Upright body text",
+   "conf": 0.9993
+  },
+  {
+   "box": [
+    91.7,
+    1232.9,
+    110.3,
+    1252.0
+   ],
+   "text": "",
+   "conf": 0.2826
+  },
+  {
+   "box": [
+    91.9,
+    1252.0,
+    110.0,
+    1269.2
+   ],
+   "text": "",
+   "conf": 0.4687
+  },
+  {
+   "box": [
+    91.7,
+    1269.7,
+    110.2,
+    1288.6
+   ],
+   "text": "",
+   "conf": 0.0
+  },
+  {
+   "box": [
+    91.8,
+    1306.6,
+    114.5,
+    1325.0
+   ],
+   "text": "",
+   "conf": 0.226
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Text",
+   "bbox": [
+    201.6,
+    231.8,
+    455.8,
+    262.6
+   ],
+   "text": "Upright body text"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    91.7,
+    1232.9,
+    114.5,
+    1325.0
+   ],
+   "text": "\n\n\n"
+  }
+ ],
+ "markdown": "Upright body text"
+}

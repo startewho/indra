@@ -1,0 +1,54 @@
+{
+ "file": "dotnet/tests/parity/pdfs/labels.pdf",
+ "page": 0,
+ "source": "text",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    201.6,
+    231.8,
+    455.8,
+    262.6
+   ],
+   "text": "Upright body text",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    87.2,
+    1226.4,
+    111.5,
+    1366.7
+   ],
+   "text": "Axis label",
+   "conf": 1.0
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Text",
+   "bbox": [
+    201.6,
+    231.8,
+    455.8,
+    262.6
+   ],
+   "text": "Upright body text"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    87.2,
+    1226.4,
+    111.5,
+    1366.7
+   ],
+   "text": "Axis label"
+  }
+ ],
+ "markdown": "Upright body text\n\nAxis label"
+}

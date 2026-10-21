@@ -1,0 +1,12 @@
+{
+ "file": "dotnet/tests/parity/pdfs/invisible.pdf",
+ "page": 0,
+ "source": "ocr",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "invisible text 100% (OCR layer); order=model",
+ "lines": [],
+ "blocks": [],
+ "markdown": ""
+}

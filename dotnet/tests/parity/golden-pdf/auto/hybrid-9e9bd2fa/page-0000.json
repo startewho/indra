@@ -1,0 +1,264 @@
+{
+ "file": "dotnet/tests/parity/pdfs/hybrid.pdf",
+ "page": 0,
+ "source": "hybrid",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    95.0,
+    94.3,
+    895.0,
+    155.5
+   ],
+   "text": "Digital caption line",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    94.5,
+    206.3,
+    908.6,
+    236.4
+   ],
+   "text": "This page exercises the detector and the Latin recognizer.",
+   "conf": 0.9959
+  },
+  {
+   "box": [
+    92.0,
+    257.0,
+    924.2,
+    286.6
+   ],
+   "text": "The quick brown fox jumps over the lazy dog, 0123456789.",
+   "conf": 0.9917
+  },
+  {
+   "box": [
+    89.5,
+    308.5,
+    924.1,
+    337.3
+   ],
+   "text": "A paragraph line that is long enough to be read as one line,",
+   "conf": 0.9886
+  },
+  {
+   "box": [
+    92.3,
+    359.1,
+    767.5,
+    386.4
+   ],
+   "text": "and a second one under it with the same shape.",
+   "conf": 0.9838
+  },
+  {
+   "box": [
+    95.4,
+    460.8,
+    548.2,
+    484.9
+   ],
+   "text": "1. Numbered item with a marker",
+   "conf": 0.978
+  },
+  {
+   "box": [
+    92.0,
+    511.0,
+    939.7,
+    540.1
+   ],
+   "text": "2. Another item with (parentheses) and symbols: $ % & @ #",
+   "conf": 0.9818
+  },
+  {
+   "box": [
+    95.6,
+    612.8,
+    402.1,
+    635.8
+   ],
+   "text": "Table-like cells below:",
+   "conf": 0.9889
+  },
+  {
+   "box": [
+    109.6,
+    697.6,
+    174.4,
+    713.6
+   ],
+   "text": "Name",
+   "conf": 0.9991
+  },
+  {
+   "box": [
+    453.5,
+    696.7,
+    518.4,
+    713.3
+   ],
+   "text": "Value",
+   "conf": 0.998
+  },
+  {
+   "box": [
+    802.7,
+    697.3,
+    854.4,
+    713.3
+   ],
+   "text": "Note",
+   "conf": 0.9993
+  },
+  {
+   "box": [
+    106.3,
+    777.1,
+    167.3,
+    798.0
+   ],
+   "text": "alpha",
+   "conf": 0.9992
+  },
+  {
+   "box": [
+    456.0,
+    776.8,
+    502.8,
+    793.9
+   ],
+   "text": "12.5",
+   "conf": 0.9998
+  },
+  {
+   "box": [
+    802.7,
+    777.2,
+    844.0,
+    793.2
+   ],
+   "text": "first",
+   "conf": 0.9974
+  },
+  {
+   "box": [
+    109.7,
+    857.6,
+    156.1,
+    873.4
+   ],
+   "text": "beta",
+   "conf": 0.9996
+  },
+  {
+   "box": [
+    456.3,
+    857.6,
+    471.2,
+    872.3
+   ],
+   "text": "7",
+   "conf": 0.9995
+  },
+  {
+   "box": [
+    802.6,
+    857.2,
+    880.5,
+    873.8
+   ],
+   "text": "second",
+   "conf": 0.9993
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Section-Header",
+   "bbox": [
+    95.0,
+    94.3,
+    895.0,
+    155.5
+   ],
+   "text": "Digital caption line"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    94.5,
+    206.3,
+    908.6,
+    236.4
+   ],
+   "text": "This page exercises the detector and the Latin recognizer."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    92.0,
+    257.0,
+    924.2,
+    286.6
+   ],
+   "text": "The quick brown fox jumps over the lazy dog, 0123456789."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    89.5,
+    308.5,
+    924.1,
+    386.4
+   ],
+   "text": "A paragraph line that is long enough to be read as one line,\nand a second one under it with the same shape."
+  },
+  {
+   "label": "List-Group",
+   "bbox": [
+    95.4,
+    460.8,
+    548.2,
+    484.9
+   ],
+   "text": "1. Numbered item with a marker"
+  },
+  {
+   "label": "List-Group",
+   "bbox": [
+    92.0,
+    511.0,
+    939.7,
+    540.1
+   ],
+   "text": "2. Another item with (parentheses) and symbols: $ % & @ #"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    95.6,
+    612.8,
+    402.1,
+    635.8
+   ],
+   "text": "Table-like cells below:"
+  },
+  {
+   "label": "Table",
+   "bbox": [
+    106.3,
+    696.7,
+    880.5,
+    873.8
+   ],
+   "text": "Name\nValue\nNote\nalpha\n12.5\nfirst\nbeta\n7\nsecond"
+  }
+ ],
+ "markdown": "## Digital caption line\n\nThis page exercises the detector and the Latin recognizer.\n\nThe quick brown fox jumps over the lazy dog, 0123456789.\n\nA paragraph line that is long enough to be read as one line, and a second one under it with the same shape.\n\n1. Numbered item with a marker\n\n2. Another item with (parentheses) and symbols: $ % & @ #\n\nTable-like cells below:\n\n<table>\n<tr><th>Name</th><th>Value</th><th>Note</th></tr>\n<tr><td>alpha</td><td>12.5</td><td>first</td></tr>\n<tr><td>beta</td><td>7</td><td>second</td></tr>\n</table>"
+}

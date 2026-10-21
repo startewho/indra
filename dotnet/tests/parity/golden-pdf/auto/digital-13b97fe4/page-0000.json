@@ -1,0 +1,114 @@
+{
+ "file": "dotnet/tests/parity/pdfs/digital.pdf",
+ "page": 0,
+ "source": "text",
+ "rotation": 0,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    198.6,
+    215.3,
+    729.6,
+    266.6
+   ],
+   "text": "Quarterly report 2026",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    197.2,
+    342.0,
+    915.7,
+    374.0
+   ],
+   "text": "Revenue grew by 12 percent in the third quarter.",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    197.3,
+    392.7,
+    765.2,
+    423.6
+   ],
+   "text": "The pipeline holds 41 active accounts.",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    201.6,
+    443.0,
+    692.1,
+    473.7
+   ],
+   "text": "Margins stayed flat at 38 percent.",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    198.0,
+    1846.7,
+    571.1,
+    1873.0
+   ],
+   "text": "Prepared by the finance team.",
+   "conf": 1.0
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Section-Header",
+   "bbox": [
+    198.6,
+    215.3,
+    729.6,
+    266.6
+   ],
+   "text": "Quarterly report 2026"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.2,
+    342.0,
+    915.7,
+    374.0
+   ],
+   "text": "Revenue grew by 12 percent in the third quarter."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    197.3,
+    392.7,
+    765.2,
+    423.6
+   ],
+   "text": "The pipeline holds 41 active accounts."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    201.6,
+    443.0,
+    692.1,
+    473.7
+   ],
+   "text": "Margins stayed flat at 38 percent."
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    198.0,
+    1846.7,
+    571.1,
+    1873.0
+   ],
+   "text": "Prepared by the finance team."
+  }
+ ],
+ "markdown": "## Quarterly report 2026\n\nRevenue grew by 12 percent in the third quarter.\n\nThe pipeline holds 41 active accounts.\n\nMargins stayed flat at 38 percent.\n\nPrepared by the finance team."
+}

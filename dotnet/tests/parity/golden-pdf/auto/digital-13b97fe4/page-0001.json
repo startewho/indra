@@ -1,0 +1,54 @@
+{
+ "file": "dotnet/tests/parity/pdfs/digital.pdf",
+ "page": 1,
+ "source": "text",
+ "rotation": 270,
+ "skew": 0.0,
+ "vertical": false,
+ "note": "order=model",
+ "lines": [
+  {
+   "box": [
+    199.2,
+    219.9,
+    501.2,
+    267.2
+   ],
+   "text": "Rotated page",
+   "conf": 1.0
+  },
+  {
+   "box": [
+    201.5,
+    342.1,
+    898.5,
+    373.9
+   ],
+   "text": "This page is displayed a quarter turn clockwise.",
+   "conf": 1.0
+  }
+ ],
+ "blocks": [
+  {
+   "label": "Section-Header",
+   "bbox": [
+    199.2,
+    219.9,
+    501.2,
+    267.2
+   ],
+   "text": "Rotated page"
+  },
+  {
+   "label": "Text",
+   "bbox": [
+    201.5,
+    342.1,
+    898.5,
+    373.9
+   ],
+   "text": "This page is displayed a quarter turn clockwise."
+  }
+ ],
+ "markdown": "## Rotated page\n\nThis page is displayed a quarter turn clockwise."
+}
