@@ -205,7 +205,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 | **S2 检测+识别** ✅ | `vocab`、`rec_preproc`、`det_post`、`line_mask`、`pipeline` 的检测/裁剪/识别；**LM beam search 提前到本阶段**（默认模型必用） | `OrtOcr.Detect/Recognize`、`NgramLm`、`BeamSearch` | 10 页样本（暗底/90°/270°/7°/微小字/中英阿希）：box ≤0.5px，文本/ids/路由 100% 一致，裁剪逐字节相同 | 3–4 |
 | **S3 版面+输出** ✅ | `rtl`、`order_post`、`layout_post`、`tidy_lines`、`split_line`、`assemble`、Markdown/JSON、倾斜/转向 | `Page` 全字段 + Markdown；`OrtOcr.Read` | 10 页整页对齐：Markdown/lines/blocks/rotation/skew 100% 一致 | 3–4 |
 | **S4 PDF** ✅ | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式、混合页与密码 | `Converter.Convert` | 渲染逐像素一致；6 页 PDF × auto/text/ocr 与参考端全字段一致 | 4–6 |
-| **S5 可选模型** | `math` 自回归解码（`lm`/`script`/`orient` 已在 S2/S3 完成） | 数学能力 | 含数学页与参考端同结果 | 2–4 |
+| **S5 数学** ✅ | `mathcls` + 编码器 + KV-cache 解码器、`Detokenize`、PDF 文字层数学行重读 | `MathReader` + pipeline/document 接入 | 3 页判定/读数一致；`equations.png` 整页 LaTeX 输出一致 | 2–4 |
 | **S6 CLI+并行** | 参数、退出码、`--out` 命名规则、多核调度、错误页 | `indra-ocr` 等价 CLI | 现有 CLI 测试全绿 | 2–3 |
 | **S7 Viewer** | Minimal API + 原 HTML/JS（`viewer.py` 的 `PAGE` 原样复用） | 本地查看器 | 与现有 viewer 功能对齐 | 2–3 |
 | **S8 收尾** | 跨平台原生库、NuGet 打包、文档、性能基线 | 可发布的包 | 见 §4 验收 | 2–4 |
@@ -223,7 +223,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
 
-### 3.2 进展记录（S1–S4 已完成，2026-10-21）
+### 3.2 进展记录（S1–S5 已完成，2026-10-21）
 
 **S1 基础设施**（`dotnet/src/IndraOcr/`）：
 
@@ -290,13 +290,30 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 加密页：无密码报 `password-protected PDF`，`password="pw"` 可读
 - 多帧 TIFF、`max_pages`、不可读文件、缺失文件均有测试
 
+**S5 数学**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `Math/MathReader.cs` | `math.py` | 分类器、编码器、3 层 8 头 KV-cache 解码器、提前停止、`Detokenize` |
+| `Pipeline/OrtOcr.cs` | `recognize` 的 math 分支 | `math=True` 时按行分类并替换为 LaTeX |
+| `Document/Converter.cs` | `_read_math` | 文字层数学行重读，保留内容序 |
+| `tools/dump_math_fixtures.py` | — | 3 页的逐行判定与读数 |
+
+结果：
+
+- `equations.png` 38 行中 23 行判为数学；`english.png` / `scan.png` 各 1 行（低置信度，不替换）
+- 分类结果与每行 `(text, conf)` 与 Python **完全一致**
+- `equations.png` 整页 `--math` 的 Markdown（含 `$...$`）与参考端一致
+- 文字层替换逻辑有函数级测试（构造 3 元组 token，验证 `$` + 置信度门槛、保留首个内容索引）
+- 数学模型随 `ModelFiles.Resolve(math: true)` 下载并校验
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
 - 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
 - `table_heads=True` 的表头路径（Python 的公开 `load()` 未暴露该开关）
-- `math` 自回归解码（S5）；PDF 文字层的数学行重读也依赖它
+- 真实 PDF 文字层数学行（合成 Helvetica 页未被分类器命中；替换逻辑已用函数级测试覆盖）
 
 
 
@@ -499,7 +516,7 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S4）
+## 9. 里程碑检查清单（S0–S5）
 
 S0 已完成：
 
@@ -552,3 +569,12 @@ S4 已完成：
 - [x] 加密 PDF、密码错误、多帧 TIFF、max_pages、不可读/缺失文件
 - [ ] `math=True` 的 PDF 数学行重读（S5）
 - [ ] 多线程 PDF 文档缓存（S6，pdfium 非线程安全）
+S5 已完成：
+
+- [x] `MathReader`：分类器 flags、编码器、解码器 KV cache、提前停止、`Detokenize`
+- [x] `OrtOcr(math=True)` 接入：math 行用 LaTeX 替换（`$...$` 且置信度 ≥0.9）
+- [x] `Converter` 文字层数学行重读（`_read_math`）：保留 PDF 内容序
+- [x] 3 页数学判定与读数与 Python 一致（equations 23 行、english 1、scan 1）
+- [x] `equations.png` 整页 `--math` 输出与参考端一致（含 LaTeX）
+- [x] 数学模型按需下载并校验（`math_meta.json` + 4 个 onnx）
+- [ ] 真实 PDF 文字层数学行（分类器在合成 Helvetica 页未命中；函数级测试已覆盖替换逻辑）

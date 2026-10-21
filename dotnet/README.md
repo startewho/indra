@@ -17,6 +17,7 @@ dotnet/
     Layout/                # blocks, tables, markdown
     Rtl/                   # Unicode bidi subset (flip)
     Lm/                    # n-gram LM + CTC beam search
+    Math/                  # math line classifier + attention decoder
     Pdf/                   # PDFium P/Invoke, document/page/text page
     TextLayer/             # text-layer runs and trust checks
     Document/              # Converter: auto / ocr / text PDF modes
@@ -56,6 +57,7 @@ python tools/dump_golden.py   --out dotnet/tests/parity/golden examples/samples/
 python tools/dump_artifacts.py --out dotnet/tests/parity/artifacts <pages...>
 python tools/dump_lm_fixture.py                                # LM + beam fixture
 python tools/dump_stage_fixtures.py                            # bidi / order / layout
+python tools/dump_math_fixtures.py                             # math flags + readings
 python tools/dump_pdf_fixtures.py                              # render hashes + text layers
 python tools/compare_golden.py dotnet/tests/parity/golden dotnet/tests/parity/actual
 ```
@@ -76,7 +78,7 @@ Rules: text / reading order / markdown / `note` / `source` must match exactly;
 boxes within 0.5 px, confidences within 1e-4, detector tensors within 1e-6, line
 crops byte for byte, PDF renders by SHA-256.
 
-What the tests cover (S1–S4):
+What the tests cover (S1–S5):
 
 - detector input/output/boxes, adaptive second pass
 - line crops (32 px and 96 px window), CTC output, script routing, confidence
@@ -84,9 +86,12 @@ What the tests cover (S1–S4):
 - page orientation, deskew, reading order, layout blocks and markdown
 - PDFium rendering, text-layer runs and trust verdicts, all three Converter
   modes, hybrid pages, passwords, multi-frame TIFF and input errors
+- math line classification, attention decoding with KV cache, LaTeX output on
+  whole pages, and the PDF text-layer math replacement
 
 Not covered yet: the optional `mask.onnx`, det's picture channel, real vertical
-pages, `table_heads=True`, and math (S5).
+pages, `table_heads=True`, and a real PDF whose text-layer math lines the
+classifier flags.
 
 ## Native dependencies
 

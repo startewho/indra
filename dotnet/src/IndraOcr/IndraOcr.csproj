@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,6 +11,10 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
     <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="IndraOcr.Tests" />
   </ItemGroup>
 
 </Project>

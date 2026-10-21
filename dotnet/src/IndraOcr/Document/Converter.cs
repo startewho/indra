@@ -279,6 +279,67 @@ public sealed class Converter
         return TextPageOn(page, textLayer, timings, check, gray, k, turn, vertical);
     }
 
+    /// <summary>
+    /// Text-layer lines that hold math (the classifier, on their crops) are read
+    /// by MathReader instead: the layer has the symbols but not the LaTeX.  The
+    /// line keeps its place in the PDF content order (its first character's index).
+    /// </summary>
+    internal void ReadMath(Mat gray, float[] boxes, Pipeline.RecLine?[] rec)
+    {
+        int n = boxes.Length / 5;
+        var idx = new List<int>();
+        for (int i = 0; i < n; i++)
+        {
+            if (rec[i] is { } r && r.Tokens.Length > 0
+                && r.Tokens[0].Char is not null && r.Tokens[0].Seq >= 0)
+            {
+                idx.Add(i);
+            }
+        }
+        if (idx.Count == 0)
+        {
+            return;
+        }
+        var boxList = new List<float[]>(idx.Count);
+        foreach (int i in idx)
+        {
+            boxList.Add(new[] { boxes[i * 5], boxes[i * 5 + 1], boxes[i * 5 + 2], boxes[i * 5 + 3] });
+        }
+        var crops = Pipeline.LineMask.CropLines(gray, boxList, _ocr.Height);
+        var flags = _ocr.MathRec!.Flags(crops);
+        var math = new List<int>();
+        for (int k = 0; k < idx.Count; k++)
+        {
+            if (flags[k])
+            {
+                math.Add(idx[k]);
+            }
+        }
+        if (math.Count == 0)
+        {
+            return;
+        }
+        var sub = new float[math.Count * 5];
+        for (int k = 0; k < math.Count; k++)
+        {
+            Array.Copy(boxes, math[k] * 5, sub, k * 5, 4);
+        }
+        var readings = _ocr.MathRec.Read(gray, sub);
+        for (int k = 0; k < math.Count; k++)
+        {
+            var (text, conf) = readings[k];
+            // A reading without math, or not confident, leaves the layer's text.
+            if (text.Contains('$') && conf >= MathOcr.MathReader.MinConf)
+            {
+                int i = math[k];
+                int first = rec[i]!.Tokens.Min(t => t.Seq);
+                float xc = (boxes[i * 5] + boxes[i * 5 + 2]) / 2;
+                rec[i] = new Pipeline.RecLine(text, 1.0,
+                    new[] { Pipeline.Token.FromChar(text, xc, first) });
+            }
+        }
+    }
+
     private Pipeline.Page? TextPageOn(
         PdfPage page, TextLayerType textLayer, Dictionary<string, double> timings, bool check,
         Mat gray, double k, int turn, bool vertical)
@@ -373,6 +434,13 @@ public sealed class Converter
                 }
             }
             timings["rec_ms"] = sw.Elapsed.TotalMilliseconds;
+        }
+
+        if (_ocr.MathRec is not null)
+        {
+            sw.Restart();
+            ReadMath(gray, boxes, rec);
+            timings["math_ms"] = sw.Elapsed.TotalMilliseconds;
         }
 
         var keep = Enumerable.Range(0, n).Where(i => rec[i] is not null).ToList();

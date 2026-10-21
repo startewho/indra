@@ -1,5 +1,6 @@
 using IndraOcr.Imaging;
 using IndraOcr.Lm;
+using MathReaderType = IndraOcr.MathOcr.MathReader;
 using IndraOcr.Models;
 using IndraOcr.Numerics;
 using Microsoft.ML.OnnxRuntime;
@@ -33,7 +34,7 @@ public sealed partial class OrtOcr : IDisposable
     private readonly record struct LmConfig(NgramLm Lm, double Alpha, double Beta, double Gate);
 
     public OrtOcr(string modelDir, int threads = 4, bool adaptive = true, string[]? providers = null,
-        bool tableHeads = false, bool furniture = false)
+        bool tableHeads = false, bool furniture = false, bool math = false)
     {
         var so = OrtUtil.Options(threads);
         _owned.Add(so);
@@ -59,6 +60,12 @@ public sealed partial class OrtOcr : IDisposable
         if (Groups.Count > 0 && File.Exists(Path.Combine(modelDir, "script.onnx")))
         {
             Script = Load(Path.Combine(modelDir, "script.onnx"), so);
+        }
+        // Math: a line classifier routes lines with math to MathReader.
+        if (math)
+        {
+            MathRec = MathReaderType.Load(modelDir, so)
+                   ?? throw new FileNotFoundException($"math=True needs the math models in {modelDir}");
         }
         // Language models: lm.npz for rec.onnx, lm_<group>.npz for a group's
         // recognizer.  Each needs its recognizer's top-k outputs.
@@ -103,6 +110,7 @@ public sealed partial class OrtOcr : IDisposable
     public bool Adaptive { get; }
     public bool TableHeads { get; }
     public bool Furniture { get; }
+    public MathReaderType? MathRec { get; }
 
     private InferenceSession Load(string path, SessionOptions so)
     {
@@ -430,6 +438,39 @@ public sealed partial class OrtOcr : IDisposable
                 }
             }
         }
+        if (MathRec is not null && crops.Count > 0)
+        {
+            var flags = MathRec.Flags(crops);
+            var mathIdx = new List<int>();
+            for (int i = 0; i < flags.Length; i++)
+            {
+                if (flags[i])
+                {
+                    mathIdx.Add(i);
+                }
+            }
+            if (mathIdx.Count > 0)
+            {
+                var sub = new float[mathIdx.Count * 5];
+                for (int k = 0; k < mathIdx.Count; k++)
+                {
+                    Array.Copy(boxList[mathIdx[k]], 0, sub, k * 5, 4);
+                }
+                var readings = MathRec.Read(gray, sub);
+                for (int k = 0; k < mathIdx.Count; k++)
+                {
+                    var (text, conf) = readings[k];
+                    // Only a confident reading with math replaces the line (one
+                    // token holds the whole line: it is never split).
+                    if (text.Contains('$') && conf >= MathReaderType.MinConf)
+                    {
+                        int j = mathIdx[k];
+                        float xc = (boxList[j][0] + boxList[j][2]) / 2;
+                        outv[j] = new RecLine(text, 1.0, new[] { Token.FromChar(text, xc) });
+                    }
+                }
+            }
+        }
         return outv;
     }
 
@@ -509,6 +550,7 @@ public sealed partial class OrtOcr : IDisposable
 
     public void Dispose()
     {
+        MathRec?.Dispose();
         foreach (var d in _owned)
         {
             d.Dispose();
