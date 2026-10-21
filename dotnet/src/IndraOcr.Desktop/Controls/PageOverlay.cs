@@ -44,7 +44,83 @@ public sealed class PageOverlay : Control
     public bool ShowOrder { get; set; }
     public int HighlightedLine { get; set; } = -1;
 
+    /// <summary>Raised when the pointer moves on/off a line box (index, -1 = none).</summary>
+    public event Action<int>? LineHoverChanged;
+
     public void Refresh() => InvalidateVisual();
+
+    /// <summary>Highlights the line box under a point in overlay coordinates.</summary>
+    public void HoverAt(Point position)
+    {
+        int hit = ShowLines ? HitTestLine(position) : -1;
+        if (hit == HighlightedLine)
+        {
+            return;
+        }
+        HighlightedLine = hit;
+        LineHoverChanged?.Invoke(hit);
+        InvalidateVisual();
+    }
+
+    /// <summary>Clears the hover highlight when the pointer leaves the page.</summary>
+    public void ClearHover()
+    {
+        if (HighlightedLine < 0)
+        {
+            return;
+        }
+        HighlightedLine = -1;
+        LineHoverChanged?.Invoke(-1);
+        InvalidateVisual();
+    }
+
+    /// <summary>Finds the smallest line box under a point in page coordinates.</summary>
+    private int HitTestLine(Point position)
+    {
+        if (Image is null)
+        {
+            return -1;
+        }
+        return HitTestLine(position, Bounds.Size, Image.PixelSize, Lines);
+    }
+
+    /// <summary>Hit-tests page-space line boxes in a letterboxed image area.</summary>
+    public static int HitTestLine(
+        Point position, Size bounds, PixelSize image, IReadOnlyList<LineView> lines)
+    {
+        if (lines.Count == 0)
+        {
+            return -1;
+        }
+        double iw = Math.Max(1, image.Width);
+        double ih = Math.Max(1, image.Height);
+        double scale = Math.Min(bounds.Width / iw, bounds.Height / ih);
+        if (scale <= 0)
+        {
+            return -1;
+        }
+        double ox = (bounds.Width - iw * scale) / 2;
+        double oy = (bounds.Height - ih * scale) / 2;
+        double x = (position.X - ox) / scale;
+        double y = (position.Y - oy) / scale;
+        int best = -1;
+        double bestArea = double.MaxValue;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            if (x < line.X0 || x > line.X1 || y < line.Y0 || y > line.Y1)
+            {
+                continue;
+            }
+            double area = (line.X1 - line.X0) * (line.Y1 - line.Y0);
+            if (area < bestArea)
+            {
+                bestArea = area;
+                best = i;
+            }
+        }
+        return best;
+    }
 
     protected override Size MeasureOverride(Size availableSize)
     {

@@ -341,14 +341,14 @@ $env:HF_HUB_DISABLE_XET = "1"
 - `/info` 的 `version/tesseract/defaults` 与参考一致
 - 6 个 viewer 测试通过（引擎 + 真实 Kestrel HTTP）：图像/PDF、旋转页、非法 mode、坏文件、未知文档、HTTP 400
 - Tesseract 对照未实现：`--tesseract` 会提示不可用，`/info.tesseract` 为 false
-- 全量测试 **71 passed**
+- 全量测试 **73 passed**
 
 **桌面 GUI（Avalonia 12 + Semi Avalonia）**：
 
 | 文件 | 内容 |
 |---|---|
 | `src/IndraOcr.Desktop/Session/OcrSession.cs` | 打开文档、按选项读单页、模型缓存/下载、JPEG + 行/块 + JSON |
-| `src/IndraOcr.Desktop/Controls/PageOverlay.cs` | 页图叠加行框、版面块、标签、阅读序；行高亮 |
+| `src/IndraOcr.Desktop/Controls/PageOverlay.cs` | 页图叠加行框、版面块、标签、阅读序；框 ↔ 右侧行列表双向悬停高亮 |
 | `src/IndraOcr.Desktop/Controls/LoadingSpinner.cs` | 识别/下载时的旋转点 Loading 动画 |
 | `src/IndraOcr.Desktop/Localization.cs` | 中/英界面切换，默认系统语言，选择持久化 |
 | `src/IndraOcr.Desktop/Controls/MarkdownRenderer.cs` | 与 Web 相同的 Markdown 子集（标题/段落/列表/HTML 表格/LaTeX） |
@@ -362,8 +362,10 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 图像（scan.png）读取 36 行、9 blocks；PDF 旋转页、模型目录/下载、显示开关可用
 - 语言：默认跟随系统（中文系统为中文），右上角可切 English/中文；切换后页卡/标签/统计重建，选择写入本地
 - 识别中全窗半透明遮罩 + 旋转点动画，侧栏禁用、覆盖层拦截点击
+- 页框悬停：页图上的文本框高亮时，右侧 `行` 列表同步选中对应行；反向悬停行也会高亮页框
+- 页卡 4 个标签页等宽（96 DIP）；重新读取按钮文案为“重新读取”
 - NativeAOT：`publish-desktop.ps1` 发布；真实进程完成 scan.png OCR（36 行/9 blocks），输出约 165 MB
-- 4 个 session 测试 + 全量 **71 passed**
+- 4 个 session 测试 + 2 个覆盖层命中测试；全量 **73 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
 **尚未覆盖（留给后续阶段）**：
@@ -663,12 +665,13 @@ S7 已完成：
 
 - [x] Avalonia 12 + Semi Avalonia，布局仿 Web 查看器
 - [x] 页图覆盖层：行框、版面块、块标签、阅读序、行高亮
-- [x] 逐页读取、4 个标签页（Preview/Markdown/Lines/JSON）
+- [x] 页框 ↔ 右侧行列表双向悬停同步高亮
+- [x] 逐页读取、4 个等宽标签页（Preview/Markdown/Lines/JSON）
 - [x] 模型目录输入/选择/下载（含 math）；首次读取自动下载
 - [x] 来源/管线/DPI/最大页数/显示开关；真实文件与拖放打开
 - [x] 高 DPI 适配（PerMonitorV2 manifest + 按可用屏幕收敛窗口）
 - [x] 中/英切换，默认系统语言并持久化；页卡/覆盖层/统计随语言重建
 - [x] 识别中 Loading 遮罩，禁止点击与拖放
 - [x] NativeAOT 发布（`publish-desktop.ps1`），真实进程 OCR 验证通过
-- [x] 4 个 session 测试；全量 71 passed
+- [x] 4 个 session 测试 + 2 个覆盖层测试；全量 73 passed
 - [ ] Tesseract 对照（与 Web viewer 相同，未实现）

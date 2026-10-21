@@ -349,7 +349,7 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 
 - **语言**：右上角 `中文 / English` 切换，默认跟随系统语言；选择会记住（`%LOCALAPPDATA%\indra-ocr\desktop-language.txt`）。切换后静态文案、页卡、覆盖层标签、统计和提示立即更新
 - **识别中**：整个窗口显示半透明遮罩 + 旋转点 Loading 动画，并禁止点击（侧栏同时禁用），完成或出错后恢复
-- **Source**：Auto / OCR / Text layer，切换后点 “用这些选项重新读取”
+- **Source**：Auto / OCR / Text layer，切换后点 “重新读取”
 - **Pipeline**：Math as LaTeX、保留页眉页脚、OCR 图片内文字；DPI（150/200/300）；最大页数
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
 - **Model**：模型目录输入框、`选择目录…`、`下载模型`
@@ -360,7 +360,7 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 - 每页卡片：
   - 页图 + 覆盖层（行框 / 版面块 / 标签 / 阅读序）
   - 右上角 **预览 / Markdown / 行 / JSON**
-  - `行` 中悬停某一行会高亮页面上的对应框
+  - `行` 中悬停某一行会高亮页面上的对应框；鼠标划过页面上的文本框，也会高亮该框并在右侧选中对应行（双向同步）
   - 顶部显示来源（文字层 / OCR / 混合）、行数、块数、旋转/倾斜、阶段耗时条
 
 

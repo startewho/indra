@@ -148,7 +148,8 @@ Avalonia 12 + Semi Avalonia, laid out like the web viewer: file drop/choose on
 the left, pipeline options, model folder + download, display toggles and run
 stats; each page shows the image with line boxes, layout blocks, labels and
 reading order, plus Preview / Markdown / Lines / JSON tabs. Hovering a line in
-the list highlights its box. Pages appear as they finish.
+the list highlights its box; hovering a box on the page highlights it and
+selects the matching row (both directions). Pages appear as they finish.
 
 The UI follows the system language (English or Chinese) and can be switched in
 the top bar; the choice is remembered. While a document is being read, a

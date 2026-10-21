@@ -149,7 +149,7 @@ public partial class MainWindow : Window
         TesseractText.Text = Loc.T("Compare with Tesseract", "与 Tesseract 对比");
         DpiCaption.Text = "DPI";
         MaxPagesCaption.Text = Loc.T("MAX PAGES", "最大页数");
-        RerunButton.Content = Loc.T("Read again with these options", "用这些选项重新读取");
+        RerunButton.Content = Loc.T("Read again", "重新读取");
         BrowseButton.Content = Loc.T("Choose folder...", "选择目录…");
         DownloadButton.Content = Loc.T("Download", "下载模型");
         ModelPathBox.PlaceholderText = Loc.T(
@@ -701,6 +701,13 @@ public partial class MainWindow : Window
             ColumnDefinitions = new ColumnDefinitions("1.05*,*"),
             MinHeight = 420,
         };
+        var overlayHost = new Border
+        {
+            Background = Brushes.Transparent,
+            Child = overlay,
+        };
+        overlayHost.PointerMoved += (_, e) => overlay.HoverAt(e.GetPosition(overlay));
+        overlayHost.PointerExited += (_, _) => overlay.ClearHover();
         var left = new Border
         {
             Background = Surface,
@@ -709,7 +716,7 @@ public partial class MainWindow : Window
             Padding = new Thickness(16),
             Child = new ScrollViewer
             {
-                Content = overlay,
+                Content = overlayHost,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             },
@@ -749,12 +756,21 @@ public partial class MainWindow : Window
             Padding = new Thickness(12, 10),
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
-        tabs.Items.Add(new TabItem { Header = Loc.T("Preview", "预览"), Content = preview });
-        tabs.Items.Add(new TabItem { Header = "Markdown", Content = markdown });
-        tabs.Items.Add(new TabItem { Header = Loc.T("Lines", "行"), Content = lines });
-        tabs.Items.Add(new TabItem { Header = "JSON", Content = json });
+        tabs.Items.Add(Tab(Loc.T("Preview", "预览"), preview));
+        tabs.Items.Add(Tab("Markdown", markdown));
+        tabs.Items.Add(Tab(Loc.T("Lines", "行"), lines));
+        tabs.Items.Add(Tab("JSON", json));
         tabs.SelectedIndex = 0;
         return tabs;
+
+        static TabItem Tab(string header, object content) => new()
+        {
+            Header = header,
+            Content = content,
+            Width = 96,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            Padding = new Thickness(8, 8),
+        };
     }
 
     private static Control PaneText(string text, bool wrap) => new TextBox
@@ -775,6 +791,22 @@ public partial class MainWindow : Window
     private static Control LineRows(PageResult page, PageOverlay overlay)
     {
         var list = new StackPanel { Spacing = 1 };
+        var rows = new List<(Border Row, TextBlock Index)>();
+
+        void Select(int selected)
+        {
+            for (int j = 0; j < rows.Count; j++)
+            {
+                bool on = j == selected;
+                rows[j].Row.Background = on ? AccentSoft : Brushes.Transparent;
+                rows[j].Row.BorderBrush = on ? Accent : Brushes.Transparent;
+                rows[j].Index.Foreground = on
+                    ? Accent
+                    : new SolidColorBrush(Color.Parse("#9CA3AF"));
+                rows[j].Index.FontWeight = on ? FontWeight.SemiBold : FontWeight.Normal;
+            }
+        }
+
         for (int i = 0; i < page.Lines.Count; i++)
         {
             var line = page.Lines[i];
@@ -823,26 +855,36 @@ public partial class MainWindow : Window
 
             var row = new Border
             {
-                Padding = new Thickness(6, 3),
+                Padding = new Thickness(4, 3),
                 CornerRadius = new CornerRadius(5),
                 Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                BorderThickness = new Thickness(2, 0, 0, 0),
                 Child = grid,
             };
+            rows.Add((row, index));
             int lineIndex = i;
             row.PointerEntered += (_, _) =>
             {
+                Select(lineIndex);
                 overlay.HighlightedLine = lineIndex;
                 overlay.Refresh();
-                row.Background = AccentSoft;
             };
             row.PointerExited += (_, _) =>
             {
+                if (overlay.HighlightedLine != lineIndex)
+                {
+                    return;
+                }
+                Select(-1);
                 overlay.HighlightedLine = -1;
                 overlay.Refresh();
-                row.Background = Brushes.Transparent;
             };
             list.Children.Add(row);
         }
+
+        // Hovering a box on the page selects the matching row here.
+        overlay.LineHoverChanged += Select;
         return list;
     }
 

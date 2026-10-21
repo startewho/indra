@@ -152,7 +152,7 @@
                                                    HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Grid>
-                            <Button x:Name="RerunButton" Content="Read again with these options"
+                            <Button x:Name="RerunButton" Content="Read again"
                                     Background="#1D4ED8" Foreground="White" CornerRadius="7"
                                     Padding="10,8" HorizontalAlignment="Stretch"
                                     IsEnabled="False" Click="OnRerun" />
