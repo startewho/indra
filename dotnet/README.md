@@ -23,7 +23,7 @@ dotnet/
     Document/              # Converter: auto / ocr / text PDF modes
     Parallel/              # convert_many: pages across cores
   src/IndraOcr.Cli/        # indra-ocr equivalent
-  src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent (S7)
+  src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent
   tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
   tests/parity/            # golden data, artifacts, PDFs, fixtures
 ```
@@ -98,7 +98,7 @@ auto|ocr|text`, `--no-image-ocr`, `--model-dir`, `--cores`, `--dpi`,
 endings); JSON matches field by field except `timings`. Pages of one file run in
 parallel; files are processed one at a time, in input order.
 
-What the tests cover (S1–S6):
+What the tests cover (S1–S7):
 
 - detector input/output/boxes, adaptive second pass
 - line crops (32 px and 96 px window), CTC output, script routing, confidence
@@ -110,10 +110,29 @@ What the tests cover (S1–S6):
   whole pages, and the PDF text-layer math replacement
 - CLI options, formats, output naming, exit codes, UTF-8/newlines, parallel page
   conversion and error isolation
+- viewer engine and HTTP routes: upload/page/info, image and PDF pages, options
+  and error responses
 
 Not covered yet: the optional `mask.onnx`, det's picture channel, real vertical
-pages, `table_heads=True`, and a real PDF whose text-layer math lines the
-classifier flags.
+pages, `table_heads=True`, a real PDF whose text-layer math lines the classifier
+flags, and the viewer's Tesseract comparison.
+
+## Viewer
+
+```shell
+dotnet run --project src/IndraOcr.Viewer -- --port 8765 --threads 4
+# open http://localhost:8765
+```
+
+Drop a PDF or an image: each page shows lines, layout blocks and reading order
+over the page, the rendered markdown, its source, per-line confidences, the JSON
+the CLI writes, where the text came from, and the time of each stage. Pipeline
+options are changed in the page and apply when the document is read again.
+
+The routes and response fields match `viewer.py` (`/`, `/info`, `/upload`,
+`/page`, `/logo.png`); the HTML/JS is the Python page, embedded as a resource.
+Tesseract comparison is not implemented (`--tesseract` reports it as
+unavailable).
 
 ## Native dependencies
 

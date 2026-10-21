@@ -207,7 +207,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 | **S4 PDF** ✅ | PDFium P/Invoke、渲染（灰度/DPI/Rotate）、`textlayer`、`document` 的 auto/ocr/text 三模式、混合页与密码 | `Converter.Convert` | 渲染逐像素一致；6 页 PDF × auto/text/ocr 与参考端全字段一致 | 4–6 |
 | **S5 数学** ✅ | `mathcls` + 编码器 + KV-cache 解码器、`Detokenize`、PDF 文字层数学行重读 | `MathReader` + pipeline/document 接入 | 3 页判定/读数一致；`equations.png` 整页 LaTeX 输出一致 | 2–4 |
 | **S6 CLI+并行** ✅ | 参数、退出码、`--out` 命名规则、多核分页、错误隔离、UTF-8/换行 | `indra-ocr` 等价 CLI；`PageRunner` | md 与 Python **逐字节一致**；JSON 语义一致；cores=1/4 输出相同 | 2–3 |
-| **S7 Viewer** | Minimal API + 原 HTML/JS（`viewer.py` 的 `PAGE` 原样复用） | 本地查看器 | 与现有 viewer 功能对齐 | 2–3 |
+| **S7 Viewer** ✅ | ASP.NET Core + 原 HTML/JS（`PAGE` 原样复用）、`/upload`/`/page`/`/info` | `IndraOcr.Viewer` | 页面与 JSON 字段一致；真实 HTTP 冒烟通过 | 2–3 |
 | **S8 收尾** | 跨平台原生库、NuGet 打包、文档、性能基线 | 可发布的包 | 见 §4 验收 | 2–4 |
 
 - 全量对齐（S0–S7）≈ **5 周**；加跨平台/性能打磨 ≈ 6 周。
@@ -223,7 +223,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 4. 写 `tools/compare.py`：按 §4 的容差报告差异，输出最小反例页。
 5. 移植 `vocab.py` + `det_post.py`（这两块能立刻用黄金数据验证，且不依赖 PDF）。
 
-### 3.2 进展记录（S1–S6 已完成，2026-10-21）
+### 3.2 进展记录（S1–S7 已完成，2026-10-21）
 
 **S1 基础设施**（`dotnet/src/IndraOcr/`）：
 
@@ -326,6 +326,23 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 参数错误退出 2；输入失败/模型错误退出 1；`--out` 重名生成 `_2`
 - 61 个测试全部通过
 
+**S7 Viewer**：
+
+| 文件 | 对应 Python | 状态 |
+|---|---|---|
+| `src/IndraOcr.Viewer/ViewerEngine.cs` | `viewer.Engine` | 上传、最近 5 个文档、按请求选项读单页、OCR 缓存与预热 |
+| `src/IndraOcr.Viewer/ViewerApp.cs` | `make_handler` | 路由、JSON 错误 400、内嵌 HTML/logo |
+| `src/IndraOcr.Viewer/ViewerOptions.cs` | `_main` | 端口、线程、dpi、页数、模式等参数 |
+| `src/IndraOcr.Viewer/wwwroot/index.html` | `viewer.PAGE` | 原样复用；logo 改为 `/logo.png` |
+
+结果：
+
+- 真实进程冒烟：`GET /` 返回 22 KB HTML，`/logo.png` 可读；上传 `scan.png` 后读取第 1 页得到 36 行、9 blocks、JPEG data URI
+- `/info` 的 `version/tesseract/defaults` 与参考一致
+- 6 个 viewer 测试通过（引擎 + 真实 Kestrel HTTP）：图像/PDF、旋转页、非法 mode、坏文件、未知文档、HTTP 400
+- Tesseract 对照未实现：`--tesseract` 会提示不可用，`/info.tesseract` 为 false
+- 全量测试 **67 passed**
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
@@ -334,6 +351,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 - `table_heads=True` 的表头路径（Python 的公开 `load()` 未暴露该开关）
 - 真实 PDF 文字层数学行（合成 Helvetica 页未被分类器命中；替换级测试已覆盖）
 - 多文件之间的并行（当前逐文件 + 文件内分页并行）
+- Viewer 的 Tesseract 对照
 
 
 
@@ -536,7 +554,7 @@ Python 用「每核一个单线程进程」，是因为 pdfium 非线程安全�
 
 ---
 
-## 9. 里程碑检查清单（S0–S6）
+## 9. 里程碑检查清单（S0–S7）
 
 S0 已完成：
 
@@ -607,3 +625,13 @@ S6 已完成：
 - [x] 退出码：0 / 1（输入失败、模型错误）/ 2（参数错误）；stderr 文案与参考一致
 - [x] `--out` 重名 `_2`、`_3`；UTF-8 输出；Windows 换行与 Python 一致
 - [x] `--format md` 与 Python 逐字节相同；`--format json` 字段语义相同（timings 除外）
+S7 已完成：
+
+- [x] `IndraOcr.Viewer`：ASP.NET Core Minimal API，绑定 `127.0.0.1`
+- [x] 原 `viewer.py` 的 HTML/JS 原样复用（内嵌资源，logo 改为 `/logo.png`）
+- [x] `/`、`/index.html`、`/info`、`/logo.png`、`POST /upload`、`POST /page`
+- [x] 上传保留最近 5 个；PDF 临时文件；按请求选项读取单页（流式出页）
+- [x] 页面 JSON 字段与 Python 一致：`page/w/h/img/lines/blocks/markdown/source/note/rotation/skew/vertical/json/timings`
+- [x] 图像/PDF/旋转页、非法 mode、坏文件、未知文档、HTTP 错误 400
+- [x] `--port/--threads/--dpi/--max-pages/--mode/--no-image-ocr/--keep-furniture/--math/--model-dir/--version`
+- [ ] Tesseract 对照（C# viewer 不提供；`--tesseract` 会提示不可用）
