@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="using:IndraOcr.AndroidApp"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="820"
+             x:Class="IndraOcr.AndroidApp.MobileMainView"
+             FontFamily="{StaticResource CjkFont}"
+             Background="#FAFAFC">
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource CjkFont}" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource CjkFont}" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="FontFamily" Value="{StaticResource CjkFont}" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB"
+                BorderThickness="0,0,0,1" Padding="16,14">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Indra OCR" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock Text="图片 OCR · Android" FontSize="12" Foreground="#6B7280" />
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="PickButton" Content="选择图片"
+                        Click="OnPickImage" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="12" Spacing="12">
+                <Border Background="White" CornerRadius="10" BorderBrush="#E5E7EB"
+                        BorderThickness="1" Padding="8" MinHeight="240">
+                    <Grid>
+                        <TextBlock x:Name="EmptyHint" Text="选择一张图片开始识别"
+                                   Foreground="#9CA3AF" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <local:MobilePageOverlay x:Name="Overlay" />
+                    </Grid>
+                </Border>
+
+                <ProgressBar x:Name="BusyBar" IsIndeterminate="True" IsVisible="False"
+                             Height="4" />
+
+                <Border Background="White" CornerRadius="10" BorderBrush="#E5E7EB"
+                        BorderThickness="1" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="StatusText" Text="准备就绪" FontSize="13"
+                                   Foreground="#4B5563" TextWrapping="Wrap" />
+                        <Button x:Name="RecognizeButton" Content="识别图片"
+                                HorizontalAlignment="Stretch" Background="#1D4ED8"
+                                Foreground="White" IsEnabled="False"
+                                Click="OnRecognize" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="10" BorderBrush="#E5E7EB"
+                        BorderThickness="1" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="InfoText" FontSize="12" Foreground="#6B7280"
+                                   TextWrapping="Wrap" />
+                        <TextBox x:Name="MarkdownBox" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" FontSize="14" MinHeight="160"
+                                 BorderThickness="0" Background="#F9FAFB"
+                                 Padding="10" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Text="仅图片 OCR；PDF、数学与桌面高级选项暂未加入移动版"
+                   FontSize="11" Foreground="#9CA3AF" TextAlignment="Center"
+                   Margin="12,6" />
+    </Grid>
+</UserControl>

@@ -4,7 +4,7 @@
 
 - 源码位置：本仓库 `dotnet/`
 - 参考实现：同仓库的 Python 包 `indra_ocr/`（两者输出已做逐页对齐）
-- 当前状态：S0–S7 与桌面 GUI 已完成；Windows x64 已验证（桌面版仅提供 NativeAOT 发布），Linux/macOS 原生库属于 S8 收尾项
+- 当前状态：S0–S7 与桌面 GUI 已完成；Windows x64 已验证（桌面版仅提供 NativeAOT 发布）；Android 图片 OCR 实验版已加入；Linux/macOS/iOS 与完整移动端属于后续阶段
 
 ---
 
@@ -20,6 +20,7 @@
 8. [与 Python 版的差异与限制](#8-与-python-版的差异与限制)
 9. [常见问题](#9-常见问题)
 10. [测试与一致性验证](#10-测试与一致性验证)
+11. [Android（图片 OCR，实验版）](#11-android图片-ocr实验版)
 
 ---
 
@@ -27,7 +28,7 @@
 
 | 项 | 要求 |
 |---|---|
-| 操作系统 | Windows x64（已实测）；Linux/macOS 需等 S8 的跨平台原生包 |
+| 操作系统 | Windows x64（桌面/CLI/Viewer 已实测）；Android 图片 OCR（实验，API 24+）；Linux/macOS 仍待 S8 的跨平台原生包 |
 | .NET SDK | **.NET 10 SDK**（.NET 11 SDK 也能编译 `net10.0`） |
 | 内存 | 建议 ≥ 2 GB 可用；大页扫描单页可能到 GB 级 |
 | 网络 | 首次运行需从 Hugging Face 下载模型（约 76 MB；`--math` 另约 20 MB） |
@@ -490,7 +491,7 @@ cd dotnet
 dotnet test
 ```
 
-当前测试数量：**67**。没有模型目录时会自动跳过需要模型的用例；模型查找顺序：
+当前测试数量：**73**。没有模型目录时会自动跳过需要模型的用例；模型查找顺序：
 
 1. 环境变量 `INDRA_OCR_MODEL_DIR`
 2. Python 包的 Hugging Face 缓存（`~/.cache/huggingface/hub/models--datalab-to--indra-ocr/snapshots/*`）
@@ -508,3 +509,47 @@ dotnet test
 - Viewer 引擎与真实 HTTP 路由
 
 更完整的迁移与验证说明见 [`../docs/PORT_TO_CSHARP.md`](../docs/PORT_TO_CSHARP.md)。
+
+---
+
+## 11. Android（图片 OCR，实验版）
+
+![Android 图片 OCR](../docs/images/android.png)
+
+本轮新增 Android 图片 OCR。Android 版使用触屏单页界面：选择一张图片，识别后在图片上叠加行框/版面块，并显示 Markdown 文本。**PDF、数学公式、桌面高级选项和 Tesseract 对照暂未加入移动版。**
+
+### 11.1 构建与安装
+
+需要 .NET 10 SDK、Android SDK（API 24+）、JDK 和 Android NDK：
+
+```powershell
+cd dotnet
+dotnet build src/IndraOcr.Android -c Debug -f net10.0-android
+adb install -r src/IndraOcr.Android/bin/Debug/net10.0-android/tech.datalab.indraocr-Signed.apk
+```
+
+发布版：
+
+```powershell
+dotnet publish src/IndraOcr.Android -c Release -f net10.0-android
+```
+
+### 11.2 模型与原生库
+
+- 默认模型目录：应用私有 `files/Data`（`Context.FilesDir`）。
+- 首次启动检查并下载约 73 MB 核心模型；下载失败会在状态栏显示原因。
+- 离线调试可把桌面版 `Data` 推到应用私有目录（debug 包）：
+
+```powershell
+adb push src/IndraOcr.Desktop/Data /data/local/tmp/indra-data
+adb shell run-as tech.datalab.indraocr mkdir -p files/Data
+adb shell run-as tech.datalab.indraocr cp -r /data/local/tmp/indra-data/. files/Data/
+```
+
+- ONNX Runtime 和 OpenCV 原生库按 x86_64 / arm64-v8a 打包；OpenCV 使用 `Sdcb.OpenCvSharp4.mini.runtime.android-*`（4.13）。
+- 中文界面使用内嵌的 Noto Sans CJK SC（OFL，见 `Assets/Fonts/OFL.txt`）。
+- 当前 OpenCV 原生库尚未按 Android 16 的 16 KB page size 重新构建，构建会提示 `XA0141`；API 36 模拟器实测可运行，后续上架前应换用 16 KB 对齐版本。
+
+### 11.3 实测
+
+在 Android 模拟器（API 36 / x86_64）上安装 debug APK，推送模型后完成截图图片 OCR：44 行 / 7 块，页面框与 Markdown 正常显示。移动端只支持图片，不支持 PDF。

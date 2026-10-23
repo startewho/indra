@@ -370,6 +370,23 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 4 个 session 测试 + 2 个覆盖层命中测试；全量 **73 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
+**Android（图片 OCR，实验版）**：
+
+| 文件 | 内容 |
+|---|---|
+| `src/IndraOcr.Android/` | Avalonia.Android 单页：选图、识别、页图框覆盖、Markdown 文本 |
+| `MobileOcrService.cs` | 复用核心 `OrtOcr` 的图片 OCR；模型目录为应用 `files/Data`，首次下载 |
+| `Assets/Fonts/NotoSansSC-Regular.otf` | 内嵌 Noto Sans CJK SC（OFL），解决 Android 中文 tofu |
+| `AndroidManifest.xml` | INTERNET 权限；`SupportedOSPlatformVersion=24` |
+
+结果：
+
+- 在 API 36 / x86_64 模拟器安装 debug APK，推送桌面 `Data` 模型后完成**截图图片 OCR**：44 行 / 7 块，框与 Markdown 正常
+- 原生库：ONNX Runtime AAR + `Sdcb.OpenCvSharp4.mini.runtime.android-x64/arm64`（4.13）
+- 首次启动自动下载核心模型到私有目录；APK 不携带 91.5 MB 桌面模型
+- 仅图片 OCR；PDF、数学、Tesseract 和移动端高级选项未实现
+- 当前 OpenCV 库未做 16 KB page size 对齐，构建有 `XA0141` 警告；上架前需替换
+
 **尚未覆盖（留给后续阶段）**：
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）

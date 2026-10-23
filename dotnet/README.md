@@ -26,6 +26,7 @@ dotnet/
   src/IndraOcr.Cli/        # indra-ocr equivalent
   src/IndraOcr.Viewer/     # indra-ocr-viewer equivalent
   src/IndraOcr.Desktop/    # Avalonia + Semi Avalonia desktop app
+  src/IndraOcr.Android/    # Android image-OCR app (experimental)
   tests/IndraOcr.Tests/    # xUnit: ported tests + parity tests
   tests/parity/            # golden data, artifacts, PDFs, fixtures
 ```
@@ -181,6 +182,24 @@ executable. ILC reports two trim warnings from unused
 `OpenCvSharp.Mat.Cast<T>`/`Get<T>` helpers; the paths used by Indra OCR are
 AOT-safe and were verified with a real offline OCR run.
 
+## Android app (experimental)
+
+`src/IndraOcr.Android` is an Avalonia Android app for **image OCR only**:
+choose an image, recognize it on-device, and see the text boxes plus
+Markdown. PDFs, math and the desktop's advanced options are not included yet.
+
+```shell
+dotnet build src/IndraOcr.Android -c Debug -f net10.0-android
+adb install -r src/IndraOcr.Android/bin/Debug/net10.0-android/tech.datalab.indraocr-Signed.apk
+```
+
+It requires Android SDK API 24+ and the Android NDK. The first launch
+downloads the ~73 MB core models into the app-private `files/Data` directory.
+The APK packages ONNX Runtime (from the Microsoft package) and OpenCV via
+`Sdcb.OpenCvSharp4.mini.runtime.android-x64` / `-arm64`; a Noto Sans CJK SC
+font (OFL) is embedded for Chinese UI. The current OpenCV binaries are not yet
+16 KB-page aligned, so Android 16 reports `XA0141`; the API 36 emulator run
+works, but a Play Store release should use rebuilt 16 KB-aligned natives.
 
 ## Native dependencies
 
@@ -188,5 +207,6 @@ AOT-safe and were verified with a real offline OCR run.
 |---|---|
 | `Microsoft.ML.OnnxRuntime` 1.31.0 | inference (same runtime as the Python package) |
 | `OpenCvSharp4` + `OpenCvSharp4.runtime.win` 4.13.0 | OpenCV (matches `opencv-python-headless` 4.13) |
+| `Sdcb.OpenCvSharp4.mini.runtime.android-x64` / `-arm64` 4.13.0.45 | Android OpenCV natives (image OCR) |
 | `bblanchon.PDFium.Win32` **156.0.8076** | PDFium, pinned to the build `pypdfium2` bundles (pixel-exact renders) |
 | `Avalonia` 12.1.4 + `Semi.Avalonia` 12.1.0.1 | desktop UI |

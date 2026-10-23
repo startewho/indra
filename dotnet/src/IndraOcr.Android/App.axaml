@@ -1,0 +1,13 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semi="https://irihi.tech/semi"
+             x:Class="IndraOcr.AndroidApp.App"
+             RequestedThemeVariant="Light"
+             x:CompileBindings="True">
+    <Application.Resources>
+        <FontFamily x:Key="CjkFont">avares://IndraOcr.Android/Assets/Fonts/NotoSansSC-Regular.otf#Noto Sans CJK SC</FontFamily>
+    </Application.Resources>
+    <Application.Styles>
+        <semi:SemiTheme Locale="zh-CN" />
+    </Application.Styles>
+</Application>
