@@ -209,7 +209,9 @@ public sealed class OcrSession : IDisposable
         }
         else
         {
-            gray = ImageOps.LoadGray(FilePath!);
+            gray = _engineKind == OcrEngineKind.PaddleOcr
+                ? ImageOps.LoadColor(FilePath!)
+                : ImageOps.LoadGray(FilePath!);
             page = ocr.Read(gray);
         }
 

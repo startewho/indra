@@ -69,15 +69,15 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         Pipeline.OcrCapabilities.PdfRenderedPages |
         Pipeline.OcrCapabilities.LayoutBlocks;
 
-    public Pipeline.Page Read(Mat gray, bool turn = true)
+    public Pipeline.Page Read(Mat image, bool turn = true)
     {
         var total = Stopwatch.StartNew();
-        var (boxes, detMs) = Detect(gray);
+        var (boxes, detMs) = Detect(image);
         var lines = new List<Pipeline.Line>(boxes.Count);
         var rec = Stopwatch.StartNew();
         foreach (var box in boxes)
         {
-            string text = Recognize(gray, box, out double conf);
+            string text = Recognize(image, box, out double conf);
             if (text.Length == 0)
             {
                 continue;
@@ -90,7 +90,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             });
         }
         double recMs = rec.Elapsed.TotalMilliseconds;
-        var (layoutBoxes, layoutMs) = DetectLayout(gray);
+        var (layoutBoxes, layoutMs) = DetectLayout(image);
         var blockLines = new List<(Block Block, List<int> Lines)>();
         var used = new bool[lines.Count];
         foreach (var lb in layoutBoxes.OrderBy(b => (b.X1 - b.X0) * (b.Y1 - b.Y0)))
@@ -119,7 +119,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
                 Text = string.Join("\n", indices.Select(i => lines[i].Text)),
             }, indices));
         }
-        var orderedBlocks = OrderBlocks(blockLines.Select(x => x.Block).ToList(), gray.Cols, gray.Rows);
+        var orderedBlocks = OrderBlocks(blockLines.Select(x => x.Block).ToList(), image.Cols, image.Rows);
         var orderedLines = new List<Pipeline.Line>(lines.Count);
         var outputBlocks = new List<Block>(orderedBlocks.Count);
         foreach (var block in orderedBlocks)
@@ -224,7 +224,30 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
 
     private readonly record struct LayoutBox(double X0, double Y0, double X1, double Y1, string Label, double Score);
 
-    private (List<LayoutBox> Boxes, double Ms) DetectLayout(Mat gray)
+    private (List<LayoutBox> Boxes, double Ms) DetectLayout(Mat image)
+    {
+        Mat gray = image;
+        bool own = false;
+        if (image.Channels() != 1)
+        {
+            gray = new Mat();
+            Cv2.CvtColor(image, gray, ColorConversionCodes.BGR2GRAY);
+            own = true;
+        }
+        try
+        {
+            return DetectLayoutGray(gray);
+        }
+        finally
+        {
+            if (own)
+            {
+                gray.Dispose();
+            }
+        }
+    }
+
+    private (List<LayoutBox> Boxes, double Ms) DetectLayoutGray(Mat gray)
     {
         if (_layout is null)
         {
@@ -299,10 +322,10 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
     private readonly record struct Box(
         double X0, double Y0, double X1, double Y1, Point2f[]? Quad = null);
 
-    private (List<Box> Boxes, double Ms) Detect(Mat gray)
+    private (List<Box> Boxes, double Ms) Detect(Mat image)
     {
         const int limit = 960;
-        int h = gray.Rows, w = gray.Cols;
+        int h = image.Rows, w = image.Cols;
         double scale = Math.Min(h, w) < limit
             ? limit / (double)Math.Min(h, w)
             : 1.0;
@@ -314,7 +337,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         int rh = Math.Max(32, (int)Math.Round(h * scale / 32) * 32);
 
         using var resized = new Mat();
-        Cv2.Resize(gray, resized, new Size(rw, rh), interpolation: InterpolationFlags.Linear);
+        Cv2.Resize(image, resized, new Size(rw, rh), interpolation: InterpolationFlags.Linear);
         var input = new DenseTensor<float>(new[] { 1, 3, rh, rw });
         float[] mean = { 0.485f, 0.456f, 0.406f };
         float[] std = { 0.229f, 0.224f, 0.225f };
@@ -478,9 +501,9 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
     private static double Distance(Point2f a, Point2f b)
         => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
 
-    private string Recognize(Mat gray, Box box, out double confidence)
+    private string Recognize(Mat image, Box box, out double confidence)
     {
-        using var raw = Crop(gray, box);
+        using var raw = Crop(image, box);
         if (raw.Empty())
         {
             confidence = 0;

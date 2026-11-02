@@ -17,6 +17,17 @@ public static class ImageOps
         return m;
     }
 
+    /// <summary>Color page of an image file (first frame).</summary>
+    public static Mat LoadColor(string path)
+    {
+        var m = Cv2.ImRead(path, ImreadModes.Color);
+        if (m.Empty())
+        {
+            throw new IOException($"{path}: not a readable image");
+        }
+        return m;
+    }
+
     /// <summary>Every frame of a multi-page TIFF (or the single frame of other files).</summary>
     public static List<Mat> LoadGrayMulti(string path)
     {
