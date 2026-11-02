@@ -1,6 +1,7 @@
 using IndraOcr.Imaging;
 using IndraOcr.Numerics;
 using IndraOcr.Pdf;
+using IndraOcr.Pipeline;
 using IndraOcr.TextLayer;
 using OpenCvSharp;
 using TextLayerType = IndraOcr.TextLayer.TextLayer;
@@ -28,21 +29,29 @@ public sealed class Converter
     public const double LatinCodes = 0.9;
     public const string NotThePage = "text layer does not match the page";
 
-    private readonly Pipeline.OrtOcr _ocr;
+    private readonly IOcrEngine _engine;
+    private readonly IIndraOcrDetails? _details;
 
-    public Converter(Pipeline.OrtOcr ocr, double dpi = 200.0, string mode = "auto", bool imageOcr = true)
+    public Converter(IOcrEngine engine, double dpi = 200.0, string mode = "auto", bool imageOcr = true)
     {
         if (mode is not ("auto" or "ocr" or "text"))
         {
             throw new ArgumentException($"mode must be auto, ocr or text, not '{mode}'");
         }
-        _ocr = ocr;
+        _engine = engine;
+        _details = engine as IIndraOcrDetails;
         Dpi = dpi;
         Mode = mode;
         ImageOcr = imageOcr;
     }
 
-    public Pipeline.OrtOcr Ocr => _ocr;
+    public Converter(Pipeline.OrtOcr ocr, double dpi = 200.0, string mode = "auto", bool imageOcr = true)
+        : this((IOcrEngine)ocr, dpi, mode, imageOcr)
+    {
+    }
+
+    public IOcrEngine Engine => _engine;
+    public Pipeline.OrtOcr Ocr => (Pipeline.OrtOcr)_engine;
     public double Dpi { get; }
     public string Mode { get; }
     public bool ImageOcr { get; }
@@ -103,8 +112,8 @@ public sealed class Converter
         {
             return true;
         }
-        var vocabs = new List<IReadOnlyDictionary<string, int>> { _ocr.Vocab.Index };
-        vocabs.AddRange(_ocr.Groups.Values.Select(g => g.Vocab.Index));
+        var vocabs = new List<IReadOnlyDictionary<string, int>> { _details!.BaseVocab };
+        vocabs.AddRange(_details!.GroupVocabs);
         int known = 0;
         foreach (string c in letters)
         {
@@ -305,8 +314,8 @@ public sealed class Converter
         {
             boxList.Add(new[] { boxes[i * 5], boxes[i * 5 + 1], boxes[i * 5 + 2], boxes[i * 5 + 3] });
         }
-        var crops = Pipeline.LineMask.CropLines(gray, boxList, _ocr.Height);
-        var flags = _ocr.MathRec!.Flags(crops);
+        var crops = Pipeline.LineMask.CropLines(gray, boxList, _details!.LineHeight);
+        var flags = _details!.MathRec!.Flags(crops);
         var math = new List<int>();
         for (int k = 0; k < idx.Count; k++)
         {
@@ -324,7 +333,7 @@ public sealed class Converter
         {
             Array.Copy(boxes, math[k] * 5, sub, k * 5, 4);
         }
-        var readings = _ocr.MathRec.Read(gray, sub);
+        var readings = _details!.MathRec.Read(gray, sub);
         for (int k = 0; k < math.Count; k++)
         {
             var (text, conf) = readings[k];
@@ -345,7 +354,7 @@ public sealed class Converter
         Mat gray, double k, int turn, bool vertical)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var boxes = _ocr.Detect(gray);
+        var boxes = _details!.Detect(gray);
         timings["det_ms"] = sw.Elapsed.TotalMilliseconds;
         int n = boxes.Length / 5;
         var (toks, lost) = AssignRuns(textLayer.Lines, boxes, n, k);
@@ -354,7 +363,7 @@ public sealed class Converter
         for (int i = 0; i < n; i++)
         {
             string text = toks[i].Count > 0
-                ? Pipeline.Assembly.Decode(toks[i], _ocr.Vocab.Decode, pageRtl: false)
+                ? Pipeline.Assembly.Decode(toks[i], _details!.Vocab.Decode, pageRtl: false)
                 : "";
             if (text.Length > 0)
             {
@@ -380,7 +389,7 @@ public sealed class Converter
                 {
                     Array.Copy(boxes, pick[i] * 5, pickBoxes, i * 5, 5);
                 }
-                var (groups, sure) = _ocr.BoxGroups(gray, pickBoxes);
+                var (groups, sure) = _details!.BoxGroups(gray, pickBoxes);
                 // A line agrees unless its layer text is Latin while the router is
                 // sure its image is another script.
                 var agree = new List<bool>();
@@ -424,7 +433,7 @@ public sealed class Converter
             {
                 Array.Copy(boxes, empty[i] * 5, sub, i * 5, 5);
             }
-            var results = _ocr.Recognize(gray, sub, vertical: vertical);
+            var results = _details!.Recognize(gray, sub, vertical: vertical);
             for (int i = 0; i < empty.Count; i++)
             {
                 if (results[i].Text.Trim().Length > 0)
@@ -436,7 +445,7 @@ public sealed class Converter
             timings["rec_ms"] = sw.Elapsed.TotalMilliseconds;
         }
 
-        if (_ocr.MathRec is not null)
+        if (_details!.MathRec is not null)
         {
             sw.Restart();
             ReadMath(gray, boxes, rec);
@@ -471,7 +480,7 @@ public sealed class Converter
             }
         }
 
-        var outPage = _ocr.Assemble(gray.Cols, gray.Rows, keptBoxes, keptRec.ToArray(), timings, vertical);
+        var outPage = _details!.Assemble(gray.Cols, gray.Rows, keptBoxes, keptRec.ToArray(), timings, vertical);
         outPage.Source = source;
         outPage.Rotation = 90 * turn;
         if (vertical)
@@ -505,6 +514,23 @@ public sealed class Converter
     {
         using var page = doc.LoadPage(index);
         var timings = new Dictionary<string, double>();
+        if (_details is null)
+        {
+            if (Mode == "text")
+            {
+                throw new NotSupportedException(
+                    $"the {_engine.DisplayName} engine has no PDF text-layer mode; use mode=auto or ocr");
+            }
+            var swNoText = System.Diagnostics.Stopwatch.StartNew();
+            using var image = Render(page, PageScale(page));
+            timings["render_ms"] = swNoText.Elapsed.TotalMilliseconds;
+            var pageResult = _engine.Read(image, turn: true);
+            pageResult.Timings["render_ms"] = timings["render_ms"];
+            pageResult.Timings["total_ms"] = pageResult.Timings
+                .Where(kv => kv.Key != "total_ms").Sum(kv => kv.Value);
+            pageResult.Note = $"mode=ocr; {pageResult.Note}";
+            return pageResult;
+        }
         string note = "mode=ocr";
         bool turn;
         if (Mode != "ocr")
@@ -579,7 +605,7 @@ public sealed class Converter
         var sw2 = System.Diagnostics.Stopwatch.StartNew();
         using var gray = Render(page, PageScale(page));
         timings["render_ms"] = sw2.Elapsed.TotalMilliseconds;
-        var result = _ocr.Read(gray, turn);
+        var result = _engine.Read(gray, turn);
         foreach (var (key, value) in timings)
         {
             result.Timings[key] = value;
@@ -612,7 +638,7 @@ public sealed class Converter
             for (int i = 0; i < limit; i++)
             {
                 using var frame = frames[i];
-                yield return (i, SafeRead(() => _ocr.Read(frame)));
+                yield return (i, SafeRead(() => _engine.Read(frame)));
             }
             foreach (var f in frames.Skip(limit))
             {

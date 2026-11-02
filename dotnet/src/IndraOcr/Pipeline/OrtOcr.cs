@@ -16,8 +16,27 @@ namespace IndraOcr.Pipeline;
 /// order and markdown (S3) are in <see cref="Assembly"/>; the PDF text layer is
 /// the Converter's job (S4).
 /// </summary>
-public sealed partial class OrtOcr : IDisposable
+public sealed partial class OrtOcr : IOcrEngine, IIndraOcrDetails
 {
+    public OcrEngineKind Kind => OcrEngineKind.Indra;
+
+    public string DisplayName => "Indra (ONNX)";
+
+    public OcrCapabilities Capabilities =>
+        OcrCapabilities.Images | OcrCapabilities.PdfRenderedPages |
+        OcrCapabilities.PdfTextLayer | OcrCapabilities.Math |
+        OcrCapabilities.LayoutBlocks | OcrCapabilities.Vertical |
+        OcrCapabilities.ModelDownload;
+
+    IReadOnlyDictionary<string, int> IIndraOcrDetails.BaseVocab => Vocab.Index;
+
+    IEnumerable<IReadOnlyDictionary<string, int>> IIndraOcrDetails.GroupVocabs =>
+        Groups.Values.Select(g => g.Vocab.Index);
+
+    int IIndraOcrDetails.LineHeight => Height;
+
+    MathReaderType? IIndraOcrDetails.MathRec => MathRec;
+
     public const float MinConf = 0.5f;
     public const double RouteSure = 0.95;
     public const int AdaptiveMinH = 9;
