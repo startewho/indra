@@ -382,18 +382,9 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             {
                 continue;
             }
-            var bounds = Cv2.BoundingRect(contour);
-            double score = 0;
-            int samples = 0;
-            for (int y = bounds.Top; y < bounds.Bottom; y += 2)
-            {
-                for (int x = bounds.Left; x < bounds.Right; x += 2)
-                {
-                    score += map[0, 0, y, x];
-                    samples++;
-                }
-            }
-            if (samples == 0 || score / samples < 0.6)
+            var scoreQuad = OrderQuad(Cv2.BoxPoints(rect));
+            double score = PolygonScore(map, scoreQuad, mw, mh);
+            if (score < 0.6)
             {
                 continue;
             }
