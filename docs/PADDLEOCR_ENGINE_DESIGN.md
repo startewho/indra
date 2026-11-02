@@ -1,6 +1,6 @@
 # PaddleOCR 引擎接入设计（先设计，后实现）
 
-状态：**A/B/C 已实施**。默认引擎仍是 Indra ONNX；桌面 GUI 已可在 Indra 与 PaddleOCR (PP-OCRv4 ONNX) 间切换，Paddle 模型随应用预置，不运行时下载。
+状态：**A/B/C 已实施**。默认引擎仍是 Indra ONNX；桌面 GUI 已可在 Indra 与 PaddleOCR (PP-OCRv6 ONNX + PP-DocLayout-S) 间切换，Paddle 模型随应用预置，不运行时下载。
 
 ---
 
@@ -205,7 +205,7 @@ public interface IOcrModelProvider
 Data/
   ...                       # 现有 Indra 模型，保持兼容
   paddleocr/
-    PP-OCRv5/
+    PP-OCRv6/
       det.onnx
       rec.onnx
       cls.onnx
@@ -232,8 +232,8 @@ Data/
 
 具体模型：
 
-- PP-OCRv5 detection（DB）
-- PP-OCRv5 recognition（SVTR/CTC）
+- PP-OCRv6 detection（DB）
+- PP-OCRv6 recognition（SVTR/CTC）
 - 可选文字方向分类 `cls`
 - 语言模型按需选择（中文/英文/多语言）
 
@@ -372,7 +372,7 @@ indra
 ### 风险
 
 1. **Paddle ONNX 后处理**：DB 的 unclip、框排序、透视裁剪、CTC 字典必须与导出模型匹配，否则框/文本会明显偏差。
-2. **模型版本漂移**：PP-OCRv5 的 det/rec 输入输出与旧版不同；需把版本、输入尺寸、mean/std 写入 `paddle_meta.json`。
+2. **模型版本漂移**：PP-OCRv6 的 det/rec 输入输出与旧版不同；需把版本、输入尺寸、mean/std 写入 `paddle_meta.json`。
 3. **输出差异**：Paddle 的阅读序、分段和 Markdown 与 Indra 不一致；UI 必须标明引擎，不能声称 parity。
 4. **PDF 文字层/数学**：Paddle 第一版没有对应实现；必须显式禁用，不能静默忽略用户勾选。
 5. **NativeAOT**：ONNX 方案可以继续 AOT；PaddleSharp/Python 方案不能保持当前单文件 AOT 发布。
@@ -395,7 +395,7 @@ indra
 建议先确认以下 4 项再进入编码：
 
 1. **Paddle 接入方式**：推荐 PaddleOCR ONNX + 现有 ORT；如果优先最快出效果，可先用 PaddleOCRSharp 做桌面验证。
-2. **PaddleOCR 版本与语言**：PP-OCRv5 中文/英文/多语言中的哪一组。
+2. **PaddleOCR 版本与语言**：PP-OCRv6 中文/英文/多语言中的哪一组。
 3. **第一版范围**：只图片 OCR（推荐），还是必须包含 PDF 渲染页。
 4. **模型分发**：首次下载（推荐）还是随发布包携带。
 

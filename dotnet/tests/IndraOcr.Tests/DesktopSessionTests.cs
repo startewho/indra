@@ -41,7 +41,7 @@ public class DesktopSessionTests
     public void PaddleEngineReadsAnImageInTheDesktopSession()
     {
         string paddle = Path.Combine(TestPaths.Root, "dotnet", "src", "IndraOcr.Desktop", "Data", "paddleocr");
-        Skip.If(!File.Exists(Path.Combine(paddle, "ch_PP-OCRv4_det_infer.onnx")),
+        Skip.If(!File.Exists(Path.Combine(paddle, "pp_ocrv6_det.onnx")),
             "bundled PaddleOCR models not found");
         using var session = new OcrSession();
         session.SetEngine(IndraOcr.Pipeline.OcrEngineKind.PaddleOcr);

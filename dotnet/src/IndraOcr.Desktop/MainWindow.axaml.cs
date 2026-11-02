@@ -38,6 +38,7 @@ public partial class MainWindow : Window
         ("rec_ms", "Recognize", "#16A34A"),
         ("ocr_ms", "OCR in images", "#0891B2"),
         ("math_ms", "Math", "#A21CAF"),
+        ("layout_ms", "Layout", "#0F766E"),
         ("order_ms", "Order", "#D97706"),
     };
 
@@ -62,6 +63,7 @@ public partial class MainWindow : Window
         "rec_ms" => Loc.T("Recognize", "识别"),
         "ocr_ms" => Loc.T("OCR in images", "图片内 OCR"),
         "math_ms" => Loc.T("Math", "数学"),
+        "layout_ms" => Loc.T("Layout", "版面"),
         "order_ms" => Loc.T("Order", "阅读序"),
         _ => key,
     };

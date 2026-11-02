@@ -1,15 +1,20 @@
 # PaddleOCR models (preinstalled)
 
-These files are an ONNX export of PaddleOCR PP-OCRv4, redistributed under
-Apache-2.0:
+These files are PP-OCRv6 ONNX plus the lightweight PP-DocLayout-S layout model,
+all Apache-2.0:
 
-- ch_PP-OCRv4_det_infer.onnx
-- ch_PP-OCRv4_rec_infer.onnx
-- ch_ppocr_mobile_v2.0_cls_infer.onnx
+- pp_ocrv6_det.onnx
+- pp_ocrv6_rec.onnx
+- ppocrv6_dict.txt
+- pp_doclayout_s.onnx
 
-Source: https://huggingface.co/SWHL/RapidOCR (PP-OCRv4)
-Original models: https://github.com/PaddlePaddle/PaddleOCR (Apache-2.0)
-Conversion: Paddle2ONNX.
+Source:
+- https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx
+- https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx
+- https://huggingface.co/stefanj0/PP-DocLayout-S-ONNX
+
+Original project: https://github.com/PaddlePaddle/PaddleOCR (Apache-2.0).
 
 The desktop app bundles these files under Data/paddleocr; runtime downloads are
-disabled.
+disabled. The layout model supplies paragraph/title/table/figure/header blocks;
+its class labels are mapped onto Indra's existing block colors.

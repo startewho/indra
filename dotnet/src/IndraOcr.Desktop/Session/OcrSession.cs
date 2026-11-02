@@ -22,7 +22,7 @@ public sealed class OcrSession : IDisposable
     public const int MaxSide = 1600;
     private static readonly string[] TimingKeys =
     {
-        "text_ms", "det_ms", "rec_ms", "ocr_ms", "math_ms", "order_ms", "total_ms",
+        "text_ms", "det_ms", "rec_ms", "ocr_ms", "math_ms", "layout_ms", "order_ms", "total_ms",
     };
 
     private readonly Dictionary<(Pipeline.OcrEngineKind Kind, bool Math, bool Furniture), Pipeline.IOcrEngine> _ocrs = new();

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using IndraOcr.Layout;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using OpenCvSharp;
@@ -8,7 +9,7 @@ namespace IndraOcr.Paddle;
 /// <summary>Locates the preinstalled PaddleOCR ONNX models (no runtime download).</summary>
 public static class PaddleModelFiles
 {
-    public static readonly string[] Required = { "ch_PP-OCRv4_det_infer.onnx", "ch_PP-OCRv4_rec_infer.onnx" };
+    public static readonly string[] Required = { "pp_ocrv6_det.onnx", "pp_ocrv6_rec.onnx", "ppocrv6_dict.txt", "pp_doclayout_s.onnx" };
 
     public static string DefaultDir()
         => Path.Combine(AppContext.BaseDirectory, "Data", "paddleocr");
@@ -36,6 +37,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
 {
     private readonly InferenceSession _det;
     private readonly InferenceSession _rec;
+    private readonly InferenceSession? _layout;
     private readonly string[] _chars;
     private readonly int _threads;
 
@@ -49,19 +51,23 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             InterOpNumThreads = 1,
             GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
         };
-        _det = new InferenceSession(Path.Combine(dir, "ch_PP-OCRv4_det_infer.onnx"), options);
-        _rec = new InferenceSession(Path.Combine(dir, "ch_PP-OCRv4_rec_infer.onnx"), options);
-        string character = _rec.ModelMetadata.CustomMetadataMap.TryGetValue("character", out var value)
-            ? value
-            : "";
-        _chars = new[] { "" }.Concat(character.Split('\n').Select(s => s.TrimEnd('\r'))).Append(" ").ToArray();
+        _det = new InferenceSession(Path.Combine(dir, "pp_ocrv6_det.onnx"), options);
+        _rec = new InferenceSession(Path.Combine(dir, "pp_ocrv6_rec.onnx"), options);
+        string layoutPath = Path.Combine(dir, "pp_doclayout_s.onnx");
+        if (File.Exists(layoutPath))
+        {
+            _layout = new InferenceSession(layoutPath, options);
+        }
+        string character = File.ReadAllText(Path.Combine(dir, "ppocrv6_dict.txt"));
+        _chars = new[] { "" }.Concat(character.Replace("\r", "").Split('\n')).Append(" ").ToArray();
     }
 
     public Pipeline.OcrEngineKind Kind => Pipeline.OcrEngineKind.PaddleOcr;
-    public string DisplayName => "PaddleOCR (PP-OCRv4)";
+    public string DisplayName => "PaddleOCR (PP-OCRv6)";
     public Pipeline.OcrCapabilities Capabilities =>
         Pipeline.OcrCapabilities.Images |
-        Pipeline.OcrCapabilities.PdfRenderedPages;
+        Pipeline.OcrCapabilities.PdfRenderedPages |
+        Pipeline.OcrCapabilities.LayoutBlocks;
 
     public Pipeline.Page Read(Mat gray, bool turn = true)
     {
@@ -84,18 +90,114 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             });
         }
         double recMs = rec.Elapsed.TotalMilliseconds;
+        var (layoutBoxes, layoutMs) = DetectLayout(gray);
+        var blocks = new List<Block>();
+        foreach (var lb in layoutBoxes)
+        {
+            var inside = lines.Where(line =>
+            {
+                double cx = (line.Box[0] + line.Box[2]) / 2;
+                double cy = (line.Box[1] + line.Box[3]) / 2;
+                return cx >= lb.X0 && cx <= lb.X1 && cy >= lb.Y0 && cy <= lb.Y1;
+            }).Select(line => line.Text).Where(text => text.Length > 0).ToList();
+            blocks.Add(new Block
+            {
+                Label = lb.Label,
+                Bbox = new[] { (float)lb.X0, (float)lb.Y0, (float)lb.X1, (float)lb.Y1 },
+                Text = string.Join("\n", inside),
+            });
+        }
+        string markdown = blocks.Count > 0
+            ? string.Join("\n\n", blocks.Select(b => b.Text).Where(t => t.Length > 0))
+            : string.Join("\n", lines.Select(l => l.Text));
         var page = new Pipeline.Page
         {
             Source = "paddleocr",
-            Note = "order=paddle; engine=paddleocr",
-            Markdown = string.Join("\n", lines.Select(l => l.Text)),
+            Note = "order=paddle; engine=paddleocr; layout=pp-doclayout-s",
+            Markdown = markdown,
         };
         page.Lines.AddRange(lines);
+        page.Blocks.AddRange(blocks);
         page.Timings["det_ms"] = detMs;
         page.Timings["rec_ms"] = recMs;
+        page.Timings["layout_ms"] = layoutMs;
         page.Timings["total_ms"] = total.Elapsed.TotalMilliseconds;
         return page;
     }
+
+    private readonly record struct LayoutBox(double X0, double Y0, double X1, double Y1, string Label, double Score);
+
+    private (List<LayoutBox> Boxes, double Ms) DetectLayout(Mat gray)
+    {
+        if (_layout is null)
+        {
+            return (new List<LayoutBox>(), 0);
+        }
+        var sw = Stopwatch.StartNew();
+        const int side = 480;
+        using var resized = new Mat();
+        Cv2.Resize(gray, resized, new Size(side, side), interpolation: InterpolationFlags.Linear);
+        var image = new DenseTensor<float>(new[] { 1, 3, side, side });
+        float[] mean = { 0.485f, 0.456f, 0.406f };
+        float[] std = { 0.229f, 0.224f, 0.225f };
+        for (int y = 0; y < side; y++)
+        {
+            for (int x = 0; x < side; x++)
+            {
+                float v = resized.At<byte>(y, x) / 255f;
+                for (int c = 0; c < 3; c++)
+                {
+                    image[0, c, y, x] = (v - mean[c]) / std[c];
+                }
+            }
+        }
+        var scale = new DenseTensor<float>(new[]
+        {
+            side / (float)Math.Max(1, gray.Rows),
+            side / (float)Math.Max(1, gray.Cols),
+        }, new[] { 1, 2 });
+        using var results = _layout.Run(new[]
+        {
+            NamedOnnxValue.CreateFromTensor(_layout.InputNames[0], image),
+            NamedOnnxValue.CreateFromTensor(_layout.InputNames[1], scale),
+        });
+        var dets = results[0].AsTensor<float>();
+        int num = Math.Min(dets.Dimensions[0], results[1].AsTensor<int>()[0]);
+        var boxes = new List<LayoutBox>();
+        for (int i = 0; i < num; i++)
+        {
+            double x0 = dets[i, 2], y0 = dets[i, 3], x1 = dets[i, 4], y1 = dets[i, 5];
+            if (x1 <= x0 || y1 <= y0)
+            {
+                continue;
+            }
+            double score = dets[i, 1];
+            if (score < 0.5)
+            {
+                continue;
+            }
+            boxes.Add(new LayoutBox(
+                Math.Max(0, x0), Math.Max(0, y0),
+                Math.Min(gray.Cols, x1), Math.Min(gray.Rows, y1),
+                LayoutLabel((int)dets[i, 0]), score));
+        }
+        return (boxes, sw.Elapsed.TotalMilliseconds);
+    }
+
+    private static string LayoutLabel(int id) => id switch
+    {
+        0 or 11 => "Section-Header",
+        1 or 17 or 18 or 20 or 21 => "Picture",
+        2 or 4 or 5 or 10 or 13 or 15 or 22 => "Text",
+        3 or 19 => "Text",
+        6 or 9 => "Caption",
+        7 => "Text",
+        8 => "Table",
+        12 => "Footnote",
+        14 => "Text",
+        16 => "Text",
+        _ => "Text",
+    };
 
     private readonly record struct Box(double X0, double Y0, double X1, double Y1);
 

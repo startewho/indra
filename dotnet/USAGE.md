@@ -357,7 +357,7 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
 - **Model**：模型全部随应用预置，**运行时不会下载**
   - Indra：默认 `<exe>\Data`（核心 + math）
-  - PaddleOCR：默认 `<exe>\Data\paddleocr`（PP-OCRv4 det/rec/cls）
+  - PaddleOCR：默认 `<exe>\Data\paddleocr`（PP-OCRv6 det/rec + PP-DocLayout-S）
   - 设置 `INDRA_OCR_MODEL_DIR` 可覆盖 Indra 路径；Paddle 路径可在输入框中选择
   - 首次读取时如果当前路径缺模型，也会自动下载（状态栏显示进度）；把应用放在只读目录时请改用可写目录
 - **RUN**：状态、每页耗时、pages/s、各阶段耗时

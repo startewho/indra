@@ -11,7 +11,7 @@ public class PaddleEngineTests
     [SkippableFact]
     public void PaddleReadsAnImageWithoutDownloading()
     {
-        Skip.If(!File.Exists(Path.Combine(Models(), "ch_PP-OCRv4_det_infer.onnx")),
+        Skip.If(!File.Exists(Path.Combine(Models(), "pp_ocrv6_det.onnx")),
             "bundled PaddleOCR models not found");
         using var engine = new PaddleOcrEngine(Models(), threads: 2);
         using var gray = ImageOps.LoadGray(TestPaths.Full("examples/samples/scan.png"));
@@ -21,5 +21,6 @@ public class PaddleEngineTests
         Assert.Contains(page.Lines, line => line.Text.Length > 0);
         Assert.Contains("det_ms", page.Timings.Keys);
         Assert.Contains("rec_ms", page.Timings.Keys);
+        Assert.True(page.Blocks.Count > 0, "PP-DocLayout produced no blocks");
     }
 }
