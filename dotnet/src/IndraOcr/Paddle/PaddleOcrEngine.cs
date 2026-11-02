@@ -113,7 +113,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         var page = new Pipeline.Page
         {
             Source = "paddleocr",
-            Note = "order=paddle; engine=paddleocr; layout=pp-doclayout-s",
+            Note = "order=paddle; engine=paddleocr; model=PP-OCRv6_small; layout=pp-doclayout-s",
             Markdown = markdown,
         };
         page.Lines.AddRange(lines);

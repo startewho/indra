@@ -703,7 +703,7 @@ public partial class MainWindow : Window
         {
             "text" => (Loc.T("Text layer", "文字层"), "#E8F5E9", "#2E7D32"),
             "hybrid" => (Loc.T("Text layer + OCR", "文字层 + OCR"), "#FFF4E5", "#B45309"),
-            "paddleocr" => ("PaddleOCR", "#F3E8FF", "#7E22CE"),
+            "paddleocr" => ("PaddleOCR v6", "#F3E8FF", "#7E22CE"),
             "error" => (Loc.T("Error", "错误"), "#FDEcea", "#B91C1C"),
             _ => ("OCR", "#E8ECFF", "#1D4ED8"),
         };
