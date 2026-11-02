@@ -7,7 +7,8 @@ public sealed record ReadOptions(
     bool Furniture,
     bool ImageOcr,
     double Dpi,
-    int MaxPages);
+    int MaxPages,
+    string Engine = "indra");
 
 /// <summary>One recognized line in page-image pixels (already scaled for display).</summary>
 public sealed record LineView(double X0, double Y0, double X1, double Y1, string Text, double Conf);

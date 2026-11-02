@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using IndraOcr.Desktop.Controls;
 using IndraOcr.Desktop.Session;
 using IndraOcr.Models;
+using IndraOcr.Pipeline;
 
 namespace IndraOcr.Desktop;
 
@@ -69,6 +70,8 @@ public partial class MainWindow : Window
     private readonly List<Bitmap> _images = new();
     private readonly List<PageResult> _pages = new();
     private bool _languageReady;
+    private bool _engineReady;
+    private OcrEngineKind _engineKind = OcrEngineKind.Indra;
     private readonly List<IReadOnlyDictionary<string, double>> _timings = new();
     private OcrSession? _session;
     private CancellationTokenSource? _cts;
@@ -83,10 +86,13 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         VersionText.Text = "v" + IndraOcrInfo.Version;
-        ModelPathBox.Text = OcrSession.DefaultModelDir();
+        _engineKind = EnginePreference.Load();
+        ModelPathBox.Text = OcrSession.DefaultModelDir(_engineKind);
+        EngineBox.SelectedIndex = _engineKind == OcrEngineKind.PaddleOcr ? 1 : 0;
         LanguageBox.SelectedIndex = Loc.Chinese ? 1 : 0;
         ApplyLanguage();
         _languageReady = true;
+        _engineReady = true;
 
         DragDrop.SetAllowDrop(DropZone, true);
         DropZone.AddHandler(DragDrop.DragOverEvent, OnDragOver);
@@ -129,11 +135,49 @@ public partial class MainWindow : Window
         RebuildCards();
     }
 
+    private void OnEngineChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_engineReady)
+        {
+            return;
+        }
+        var kind = EngineBox.SelectedIndex == 1
+            ? OcrEngineKind.PaddleOcr
+            : OcrEngineKind.Indra;
+        if (kind == _engineKind)
+        {
+            return;
+        }
+        _engineKind = kind;
+        _session?.SetEngine(kind);
+        ModelPathBox.Text = OcrSession.DefaultModelDir(kind);
+        _session?.SetModelDir(ModelPathBox.Text);
+        MathSwitch.IsEnabled = kind == OcrEngineKind.Indra;
+        ModeText.IsEnabled = kind == OcrEngineKind.Indra;
+        if (kind == OcrEngineKind.PaddleOcr)
+        {
+            MathSwitch.IsChecked = false;
+            if (Mode() == "text")
+            {
+                ModeAuto.IsChecked = true;
+                ModeOcr.IsChecked = false;
+                ModeText.IsChecked = false;
+            }
+        }
+        UpdateModeHint();
+        UpdateModelStatus();
+        if (_session?.FilePath is not null)
+        {
+            StartRead();
+        }
+    }
+
     private void ApplyLanguage()
     {
         DropTitleText.Text = Loc.T("Drop a PDF or an image", "拖入 PDF 或图片");
         DropSubtitleText.Text = Loc.T("or click to choose a file", "或点击选择文件");
         SourceCaption.Text = Loc.T("SOURCE", "来源");
+        EngineCaption.Text = Loc.T("OCR ENGINE", "OCR 引擎");
         PipelineCaption.Text = Loc.T("PIPELINE", "管线");
         ModelCaption.Text = Loc.T("MODEL", "模型");
         ShowCaption.Text = Loc.T("SHOW", "显示");
@@ -262,6 +306,13 @@ public partial class MainWindow : Window
 
     private void UpdateModeHint()
     {
+        if (_engineKind == OcrEngineKind.PaddleOcr)
+        {
+            ModeHint.Text = Loc.T(
+                "PaddleOCR renders each page and runs its own image OCR; PDF text layer and math are disabled.",
+                "PaddleOCR 对每页渲染后使用自己的图片 OCR；文字层与数学不可用。");
+            return;
+        }
         ModeHint.Text = Mode() switch
         {
             "ocr" => Loc.T("Ignores the text layer and OCRs every page.",
@@ -293,18 +344,28 @@ public partial class MainWindow : Window
             FurnitureSwitch.IsChecked == true,
             ImageOcrSwitch.IsChecked != false,
             dpi,
-            maxPages);
+            maxPages,
+            _engineKind == OcrEngineKind.PaddleOcr ? "paddleocr" : "indra");
     }
 
     private void UpdateModelStatus()
     {
         string folder = string.IsNullOrWhiteSpace(ModelPathBox.Text)
-            ? OcrSession.DefaultModelDir()
+            ? OcrSession.DefaultModelDir(_engineKind)
             : ModelPathBox.Text!.Trim();
-        bool ready = OcrSession.ModelsPresent(folder, MathSwitch.IsChecked == true);
-        ModelStatusText.Text = ready
-            ? Loc.T($"Models ready: {folder}", $"模型已就绪：{folder}")
-            : Loc.T($"Models not downloaded: {folder}", $"模型未下载：{folder}");
+        bool ready = OcrSession.ModelsPresent(folder, MathSwitch.IsChecked == true, _engineKind);
+        if (ready && _engineKind == OcrEngineKind.PaddleOcr)
+        {
+            ModelStatusText.Text = Loc.T(
+                $"PaddleOCR models ready (bundled): {folder}",
+                $"PaddleOCR 模型已就绪（随应用预置）：{folder}");
+        }
+        else
+        {
+            ModelStatusText.Text = ready
+                ? Loc.T($"Models ready: {folder}", $"模型已就绪：{folder}")
+                : Loc.T($"Models not downloaded: {folder}", $"模型未下载：{folder}");
+        }
         ModelStatusText.Foreground = ready ? Ok : Warning;
     }
 
@@ -384,6 +445,7 @@ public partial class MainWindow : Window
         {
             _session?.Dispose();
             _session = new OcrSession();
+            _session.SetEngine(_engineKind);
             _session.SetModelDir(ModelPathBox.Text);
             await Task.Run(() => _session.Open(path));
             FileNameText.Text = $"{_session.FileName} · {new FileInfo(path).Length / 1024} KB";
@@ -639,6 +701,7 @@ public partial class MainWindow : Window
         {
             "text" => (Loc.T("Text layer", "文字层"), "#E8F5E9", "#2E7D32"),
             "hybrid" => (Loc.T("Text layer + OCR", "文字层 + OCR"), "#FFF4E5", "#B45309"),
+            "paddleocr" => ("PaddleOCR", "#F3E8FF", "#7E22CE"),
             "error" => (Loc.T("Error", "错误"), "#FDEcea", "#B91C1C"),
             _ => ("OCR", "#E8ECFF", "#1D4ED8"),
         };
@@ -908,6 +971,23 @@ public partial class MainWindow : Window
 
     private async void OnDownloadModels(object? sender, RoutedEventArgs e)
     {
+        if (_engineKind == OcrEngineKind.PaddleOcr)
+        {
+            UpdateModelStatus();
+            StatusText.Foreground = Ink3;
+            StatusText.Text = Loc.T(
+                "PaddleOCR models are bundled; no download is needed.",
+                "PaddleOCR 模型已随应用预置，无需下载。");
+            return;
+        }
+        if (!OcrSession.ModelsPresent(ModelPathBox.Text, MathSwitch.IsChecked == true, _engineKind))
+        {
+            StatusText.Foreground = Error;
+            StatusText.Text = Loc.T(
+                "Indra models are bundled with the app; runtime downloads are disabled.",
+                "Indra 模型已随应用预置，运行时下载已关闭。");
+            return;
+        }
         DownloadButton.IsEnabled = false;
         SetBusy(true, Loc.T("Downloading models ...", "正在下载模型…"));
         StatusText.Foreground = Ink3;

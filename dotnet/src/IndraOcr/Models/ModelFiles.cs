@@ -35,7 +35,7 @@ public static class ModelFiles
     /// from Hugging Face instead of failing on missing files.
     /// </summary>
     public static string Resolve(
-        string? path = null, bool math = false, string? revision = null, bool allowDownload = false)
+        string? path = null, bool math = false, string? revision = null, bool allowDownload = true)
     {
         string? explicitPath = path ?? Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR");
         if (!string.IsNullOrWhiteSpace(explicitPath))
@@ -66,6 +66,12 @@ public static class ModelFiles
         if (Missing(cache, math).Count == 0)
         {
             return cache;
+        }
+        if (!allowDownload)
+        {
+            throw new ModelException(
+                $"the model folder {cache} lacks files and runtime downloads are disabled; " +
+                "ship the models in Data or set INDRA_OCR_MODEL_DIR");
         }
         DownloadWithMessage(cache, rev, math);
         var still = Missing(cache, math);

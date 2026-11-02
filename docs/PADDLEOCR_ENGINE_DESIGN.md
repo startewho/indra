@@ -1,6 +1,6 @@
 # PaddleOCR 引擎接入设计（先设计，后实现）
 
-状态：**设计稿**，尚未改代码。默认引擎仍是 Indra ONNX，PaddleOCR 作为可切换的第二引擎接入。
+状态：**A/B/C 已实施**。默认引擎仍是 Indra ONNX；桌面 GUI 已可在 Indra 与 PaddleOCR (PP-OCRv4 ONNX) 间切换，Paddle 模型随应用预置，不运行时下载。
 
 ---
 

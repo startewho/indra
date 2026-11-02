@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using IndraOcr.Document;
 using IndraOcr.Imaging;
 using IndraOcr.Models;
+using IndraOcr.Paddle;
 using IndraOcr.Pdf;
 using IndraOcr.Pipeline;
 using OpenCvSharp;
@@ -24,9 +25,10 @@ public sealed class OcrSession : IDisposable
         "text_ms", "det_ms", "rec_ms", "ocr_ms", "math_ms", "order_ms", "total_ms",
     };
 
-    private readonly Dictionary<(bool Math, bool Furniture), OrtOcr> _ocrs = new();
+    private readonly Dictionary<(Pipeline.OcrEngineKind Kind, bool Math, bool Furniture), Pipeline.IOcrEngine> _ocrs = new();
     private PdfDocument? _pdf;
     private string? _modelDir;
+    private Pipeline.OcrEngineKind _engineKind = Pipeline.OcrEngineKind.Indra;
 
     public string? FilePath { get; private set; }
     public string? FileName => FilePath is null ? null : System.IO.Path.GetFileName(FilePath);
@@ -36,17 +38,25 @@ public sealed class OcrSession : IDisposable
     /// <summary>Folder the user chose; null means the environment/cache (auto download).</summary>
     public string? ModelDir => _modelDir;
 
-    public static string DefaultModelDir()
+    public static string DefaultModelDir(OcrEngineKind kind = OcrEngineKind.Indra)
     {
+        if (kind == OcrEngineKind.PaddleOcr)
+        {
+            return PaddleModelFiles.DefaultDir();
+        }
         string? env = Environment.GetEnvironmentVariable("INDRA_OCR_MODEL_DIR");
         return string.IsNullOrWhiteSpace(env)
             ? System.IO.Path.Combine(AppContext.BaseDirectory, "Data")
             : env;
     }
 
-    public static bool ModelsPresent(string? folder, bool math)
+    public static bool ModelsPresent(string? folder, bool math, OcrEngineKind kind = OcrEngineKind.Indra)
     {
-        string dir = string.IsNullOrWhiteSpace(folder) ? DefaultModelDir() : folder;
+        string dir = string.IsNullOrWhiteSpace(folder) ? DefaultModelDir(kind) : folder;
+        if (kind == OcrEngineKind.PaddleOcr)
+        {
+            return PaddleModelFiles.Required.All(f => File.Exists(System.IO.Path.Combine(dir, f)));
+        }
         bool rec = File.Exists(System.IO.Path.Combine(dir, "rec.onnx"))
                    || File.Exists(System.IO.Path.Combine(dir, "rec.int8.onnx"));
         bool core = File.Exists(System.IO.Path.Combine(dir, "det.onnx"))
@@ -54,6 +64,22 @@ public sealed class OcrSession : IDisposable
                     && rec;
         bool mathOk = !math || ModelFiles.MathFiles.All(f => File.Exists(System.IO.Path.Combine(dir, f)));
         return core && mathOk;
+    }
+
+    public OcrEngineKind EngineKind => _engineKind;
+
+    public void SetEngine(OcrEngineKind kind)
+    {
+        if (_engineKind == kind)
+        {
+            return;
+        }
+        foreach (var ocr in _ocrs.Values)
+        {
+            ocr.Dispose();
+        }
+        _ocrs.Clear();
+        _engineKind = kind;
     }
 
     public void SetModelDir(string? folder)
@@ -109,23 +135,34 @@ public sealed class OcrSession : IDisposable
         FilePath = path;
     }
 
-    /// <summary>Download (or verify) the models and return the folder that holds them.</summary>
+    /// <summary>Resolve the preinstalled models for the current engine.</summary>
     public string ResolveModels(bool math)
-        => ModelFiles.Resolve(_modelDir, math: math, allowDownload: true);
+        => _engineKind == OcrEngineKind.PaddleOcr
+            ? PaddleModelFiles.Resolve(_modelDir)
+            : ModelFiles.Resolve(_modelDir, math: math, allowDownload: false);
 
     private void EnsureModels(ReadOptions opts)
     {
-        var key = (opts.Math, opts.Furniture);
+        var kind = _engineKind;
+        var key = (kind, opts.Math, opts.Furniture);
         if (_ocrs.ContainsKey(key))
         {
             return;
         }
         string models = ResolveModels(opts.Math);
-        var ocr = new OrtOcr(
-            models,
-            threads: Math.Max(1, Environment.ProcessorCount),
-            math: opts.Math,
-            furniture: opts.Furniture);
+        IOcrEngine ocr;
+        if (kind == OcrEngineKind.PaddleOcr)
+        {
+            ocr = new PaddleOcrEngine(models, Math.Max(1, Environment.ProcessorCount));
+        }
+        else
+        {
+            ocr = new OrtOcr(
+                models,
+                threads: Math.Max(1, Environment.ProcessorCount),
+                math: opts.Math,
+                furniture: opts.Furniture);
+        }
         using (var white = new Mat(200, 200, MatType.CV_8UC1, new Scalar(255)))
         {
             _ = ocr.Read(white); // warm-up: first-call allocations are not timed
@@ -152,7 +189,7 @@ public sealed class OcrSession : IDisposable
         }
 
         EnsureModels(opts);
-        var ocr = _ocrs[(opts.Math, opts.Furniture)];
+        var ocr = _ocrs[(_engineKind, opts.Math, opts.Furniture)];
         var conv = new ConverterType(ocr, opts.Dpi, opts.Mode, opts.ImageOcr);
 
         Page page;

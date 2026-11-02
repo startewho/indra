@@ -38,6 +38,22 @@ public class DesktopSessionTests
     }
 
     [SkippableFact]
+    public void PaddleEngineReadsAnImageInTheDesktopSession()
+    {
+        string paddle = Path.Combine(TestPaths.Root, "dotnet", "src", "IndraOcr.Desktop", "Data", "paddleocr");
+        Skip.If(!File.Exists(Path.Combine(paddle, "ch_PP-OCRv4_det_infer.onnx")),
+            "bundled PaddleOCR models not found");
+        using var session = new OcrSession();
+        session.SetEngine(IndraOcr.Pipeline.OcrEngineKind.PaddleOcr);
+        session.SetModelDir(paddle);
+        session.Open(Scan());
+        var page = session.ReadPage(0, Auto() with { Engine = "paddleocr" });
+        Assert.Equal("paddleocr", page.Source);
+        Assert.True(page.Lines.Count > 10);
+    }
+
+
+    [SkippableFact]
     public void APdfReadsBothPagesAndKeepsTheRotation()
     {
         Skip.If(TestPaths.Models is null, "models not found");

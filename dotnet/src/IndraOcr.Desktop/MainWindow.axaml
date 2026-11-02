@@ -96,6 +96,15 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
+                            <TextBlock x:Name="EngineCaption" Classes="caption" Text="OCR ENGINE" />
+                            <ComboBox x:Name="EngineBox" SelectedIndex="0"
+                                      SelectionChanged="OnEngineChanged">
+                                <ComboBoxItem Content="Indra (ONNX)" />
+                                <ComboBoxItem Content="PaddleOCR" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock x:Name="SourceCaption" Classes="caption" Text="SOURCE" />
                             <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="7"
                                     ClipToBounds="True">
