@@ -255,6 +255,7 @@ public sealed class OcrSession : IDisposable
                 Lines = lines,
                 Blocks = blocks,
                 Markdown = page.Markdown ?? page.Text,
+                Text = page.Text,
                 Json = BuildJson(index, page),
                 Source = page.Source,
                 Note = page.Note,

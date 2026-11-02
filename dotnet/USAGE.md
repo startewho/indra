@@ -355,6 +355,7 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 - **Source**：Auto / OCR / Text layer，切换后点 “重新读取”
 - **Pipeline**：Math as LaTeX、保留页眉页脚、OCR 图片内文字；DPI（150/200/300）；最大页数
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
+- **Export all（导出全部）**：点击 `导出全部…`，选择 Markdown 或纯文本后保存所有已识别页；单页直接输出内容，多页自动加页码标题/分隔
 - **About（关于）**：右上角 `About` 打开对话框，列出两个引擎当前使用的模型目录、文件数/体积、运行环境、许可和模型/项目链接
 - **Model**：模型全部随应用预置，**运行时不会下载**
   - Indra：默认 `<exe>\Data`（核心 + math）

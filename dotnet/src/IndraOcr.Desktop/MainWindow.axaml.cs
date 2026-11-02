@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -197,6 +198,7 @@ public partial class MainWindow : Window
         DpiCaption.Text = "DPI";
         MaxPagesCaption.Text = Loc.T("MAX PAGES", "最大页数");
         RerunButton.Content = Loc.T("Read again", "重新读取");
+        ExportButton.Content = Loc.T("Export all...", "导出全部…");
         BrowseButton.Content = Loc.T("Choose folder...", "选择目录…");
         DownloadButton.Content = Loc.T("Download", "下载模型");
         ModelPathBox.PlaceholderText = Loc.T(
@@ -212,14 +214,6 @@ public partial class MainWindow : Window
             "Drop a PDF or an image on the left. Pages appear as they finish, with lines, layout blocks and reading order drawn over each page.",
             "把 PDF 或图片拖到左侧。页面会逐页出现，并在页面上画出行框、版面块和阅读序。");
 
-        CalloutText.Inlines!.Clear();
-        CalloutText.Inlines.Add(new Run(Loc.T(
-            "Need handwriting, math and tables at the highest accuracy? ",
-            "需要更高精度的手写、公式和表格？")));
-        CalloutText.Inlines.Add(new Run("Chandra on Datalab") { Foreground = Accent });
-        CalloutText.Inlines.Add(new Run(Loc.T(
-            " reads them, with $5 in free credits to start.",
-            " 可以识别，并提供 $5 免费额度。")));
 
         LegendPanel.Children.Clear();
         BuildLegend();
@@ -465,6 +459,68 @@ public partial class MainWindow : Window
 
     private void OnRerun(object? sender, RoutedEventArgs e) => StartRead();
 
+    private async void OnExportAll(object? sender, RoutedEventArgs e)
+    {
+        if (_pages.Count == 0)
+        {
+            StatusText.Foreground = Warning;
+            StatusText.Text = Loc.T(
+                "Read a document before exporting.", "请先读取文档再导出。");
+            return;
+        }
+        string baseName = _session?.FileName is { } name
+            ? Path.GetFileNameWithoutExtension(name)
+            : "ocr-output";
+        string? format = await new ExportFormatWindow().ShowDialog<string?>(this);
+        if (format is null)
+        {
+            return;
+        }
+        bool plainText = format == "txt";
+        var fileType = plainText
+            ? new FilePickerFileType(Loc.T("Plain text", "纯文本"))
+            {
+                Patterns = new[] { "*.txt" },
+            }
+            : new FilePickerFileType(Loc.T("Markdown", "Markdown"))
+            {
+                Patterns = new[] { "*.md" },
+            };
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Loc.T("Export all recognized pages", "导出所有识别页"),
+            SuggestedFileName = baseName + "." + format,
+            DefaultExtension = format,
+            SuggestedFileType = fileType,
+            FileTypeChoices = new[] { fileType },
+            ShowOverwritePrompt = true,
+        });
+        if (file is null)
+        {
+            return;
+        }
+        try
+        {
+            string path = file.Path.LocalPath;
+            string content = ExportContent.Build(_pages, plainText);
+            await using (var stream = await file.OpenWriteAsync())
+            {
+                stream.SetLength(0);
+                await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+                await writer.WriteAsync(content);
+            }
+            StatusText.Foreground = Ok;
+            StatusText.Text = Loc.T(
+                $"Exported {_pages.Count} page{(_pages.Count == 1 ? "" : "s")} to {path}",
+                $"已导出 {_pages.Count} 页到 {path}");
+        }
+        catch (Exception ex)
+        {
+            StatusText.Foreground = Error;
+            StatusText.Text = Loc.T("Export failed: ", "导出失败：") + ex.Message;
+        }
+    }
+
     private void StartRead()
     {
         if (_session is null)
@@ -494,6 +550,7 @@ public partial class MainWindow : Window
         _images.Clear();
         _overlays.Clear();
         _pages.Clear();
+        ExportButton.IsEnabled = false;
         EmptyState.IsVisible = false;
         _timings.Clear();
         StatsText.Text = "";
@@ -585,6 +642,7 @@ public partial class MainWindow : Window
         if (track)
         {
             _pages.Add(page);
+            ExportButton.IsEnabled = true;
         }
         using var stream = new MemoryStream(page.ImageJpeg);
         var bitmap = new Bitmap(stream);

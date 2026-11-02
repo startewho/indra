@@ -167,7 +167,9 @@ OCR only: PDF text layer, math, Indra layout blocks and reading order are
 disabled under it. Models are preinstalled: Indra in `Data`, PaddleOCR in
 `Data/paddleocr`; the desktop app does not download models at runtime. The
 **About** button in the top bar shows both engines' model folders, file counts
-and sizes, runtime, licences and links. Tesseract comparison is disabled.
+and sizes, runtime, licences and links. **Export all...** saves every recognized
+page as Markdown or plain text (multi-page files get page headings/separators).
+Tesseract comparison is disabled.
 
 ### NativeAOT publish
 

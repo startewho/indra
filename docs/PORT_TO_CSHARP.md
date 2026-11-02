@@ -341,7 +341,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 - `/info` 的 `version/tesseract/defaults` 与参考一致
 - 6 个 viewer 测试通过（引擎 + 真实 Kestrel HTTP）：图像/PDF、旋转页、非法 mode、坏文件、未知文档、HTTP 400
 - Tesseract 对照未实现：`--tesseract` 会提示不可用，`/info.tesseract` 为 false
-- 全量测试 **75 passed**
+- 全量测试 **79 passed**
 
 **桌面 GUI（Avalonia 12 + Semi Avalonia）**：
 
@@ -355,6 +355,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 | `src/IndraOcr.Desktop/Controls/MarkdownRenderer.cs` | 与 Web 相同的 Markdown 子集（标题/段落/列表/HTML 表格/LaTeX） |
 | `src/IndraOcr.Desktop/MainWindow.axaml(.cs)` | 仿 Web 布局：来源、管线、模型、显示开关、逐页卡片与 4 个标签页；识别时全窗遮罩并禁用输入 |
 | `src/IndraOcr.Desktop/AboutWindow.axaml(.cs)` | 关于对话框：两个引擎的模型目录/文件数/体积、运行环境、许可与模型/项目链接 |
+| `src/IndraOcr.Desktop/ExportFormatWindow.axaml(.cs)` | 导出格式选择：Markdown 或纯文本 |
+| `src/IndraOcr.Desktop/Session/ExportContent.cs` | 汇总所有识别页；单页原样输出，多页加页码标题/分隔 |
 | `src/IndraOcr.Desktop/ViewerOptions/Program` | 启动、`--version`、可选初始文件 |
 | `publish-desktop.ps1` | 唯一的桌面发布入口：Rebuild + NativeAOT publish（规避 Avalonia 增量 XAML 漏编译） |
 
@@ -369,9 +371,10 @@ $env:HF_HUB_DISABLE_XET = "1"
 - OCR 引擎下拉保留 **Indra (ONNX)** 与 **PaddleOCR (PP-OCRv6 small det/rec + PP-DocLayout-S)**，选择持久化；PaddleOCR 版面块与 XY-cut 阅读序正常
 - 手写中文样图（`Snipaste_2026-10-29_16-25-47.png`）在 GUI 中识别为 8 行，中间行与阅读顺序正确
 - 右上角 **About** 打开关于对话框，显示两个引擎的当前模型目录、文件数/体积、运行环境、许可与链接
+- **导出全部** 支持 Markdown / 纯文本：GUI 实测导出 scan.png 的 Markdown 与 TXT，UTF-8 无 BOM，内容与行文本一致；多页导出由单元测试覆盖
 - 模型：默认 `<exe>\Data`，发布包携带 Indra 核心 + math + PaddleOCR 模型，离线可用；桌面端不下载模型
 - NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 272 MB
-- 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试；全量 **75 passed**
+- 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试 + 4 个导出测试；全量 **79 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
 **Android（图片 OCR，实验版）**：
@@ -701,5 +704,6 @@ S7 已完成：
 - [x] 中/英切换，默认系统语言并持久化；页卡/覆盖层/统计随语言重建
 - [x] 识别中 Loading 遮罩，禁止点击与拖放
 - [x] NativeAOT 发布（`publish-desktop.ps1`），真实进程 OCR 验证通过
-- [x] 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试；全量 75 passed
+- [x] 导出全部识别页：Markdown / 纯文本，单页直接输出、多页加页码分隔
+- [x] 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试 + 4 个导出测试；全量 79 passed
 - [ ] Tesseract 对照（与 Web viewer 相同，未实现）

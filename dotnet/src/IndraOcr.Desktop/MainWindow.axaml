@@ -157,10 +157,16 @@
                                                    HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Grid>
-                            <Button x:Name="RerunButton" Content="Read again"
-                                    Background="#1D4ED8" Foreground="White" CornerRadius="7"
-                                    Padding="10,8" HorizontalAlignment="Stretch"
-                                    IsEnabled="False" Click="OnRerun" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button x:Name="RerunButton" Grid.Column="0" Content="Read again"
+                                        Background="#1D4ED8" Foreground="White" CornerRadius="7"
+                                        Padding="10,8" HorizontalAlignment="Stretch"
+                                        IsEnabled="False" Click="OnRerun" />
+                                <Button x:Name="ExportButton" Grid.Column="1" Content="Export all..."
+                                        Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
+                                        CornerRadius="7" Padding="10,8" HorizontalAlignment="Stretch"
+                                        IsEnabled="False" Click="OnExportAll" />
+                            </Grid>
                         </StackPanel>
 
                         <StackPanel Spacing="8">

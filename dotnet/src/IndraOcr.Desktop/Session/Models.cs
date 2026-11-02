@@ -26,6 +26,7 @@ public sealed class PageResult
     public required IReadOnlyList<LineView> Lines { get; init; }
     public required IReadOnlyList<BlockView> Blocks { get; init; }
     public required string Markdown { get; init; }
+    public required string Text { get; init; }
     public required string Json { get; init; }
     public required string Source { get; init; }
     public required string Note { get; init; }

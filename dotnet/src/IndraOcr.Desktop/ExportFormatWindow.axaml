@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="430" d:DesignHeight="210"
+        x:Class="IndraOcr.Desktop.ExportFormatWindow"
+        x:CompileBindings="True"
+        Title="Export format"
+        Width="430" Height="210"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#FAFAFC">
+    <StackPanel Margin="26" Spacing="16">
+        <TextBlock x:Name="TitleText" FontSize="18" FontWeight="SemiBold" />
+        <TextBlock x:Name="IntroText" FontSize="13" Foreground="#4B5563"
+                   TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button x:Name="MarkdownButton" Background="#1D4ED8" Foreground="White"
+                    CornerRadius="7" Padding="16,8" Click="OnMarkdown" />
+            <Button x:Name="TextButton" CornerRadius="7" Padding="16,8" Click="OnText" />
+            <Button x:Name="CancelButton" CornerRadius="7" Padding="16,8" Click="OnCancel" />
+        </StackPanel>
+    </StackPanel>
+</Window>
