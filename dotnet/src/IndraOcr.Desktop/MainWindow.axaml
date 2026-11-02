@@ -46,13 +46,11 @@
         <Border DockPanel.Dock="Top" Background="#FFFFFF"
                 BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
             <Grid Height="56" Margin="24,0" ColumnDefinitions="Auto,Auto,*,Auto">
-                <Image Grid.Column="0" Width="30" Height="30" VerticalAlignment="Center"
-                       Source="avares://IndraOcr.Desktop/Assets/datalab-logo.png" />
+              
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
                             VerticalAlignment="Center" Margin="10,0,0,0">
-                    <TextBlock Text="Datalab" FontWeight="SemiBold" />
-                    <TextBlock Text="/" Foreground="#9CA3AF" />
-                    <TextBlock Text="Indra OCR" FontWeight="Medium" />
+                  
+                    <TextBlock Text="Free OCR" FontWeight="Medium" />
                     <Border Background="#F3F4F6" CornerRadius="999" Padding="8,2" Margin="6,0,0,0">
                         <TextBlock x:Name="VersionText" FontFamily="Consolas" FontSize="11"
                                    Foreground="#4B5563" />
@@ -65,11 +63,8 @@
                         <ComboBoxItem Content="English" />
                         <ComboBoxItem Content="中文" />
                     </ComboBox>
-                    <Button Classes="link" Content="GitHub" Click="OnOpenGithub" />
-                    <Button Classes="link" Content="Models" Click="OnOpenModels" />
                     <Button Classes="link" Content="About" Click="OnAbout" />
-                    <Button Content="Try Chandra on Datalab" Background="#1D4ED8" Foreground="White"
-                            CornerRadius="6" Padding="12,6" Click="OnOpenChandra" />
+                 
                 </StackPanel>
             </Grid>
         </Border>
@@ -215,14 +210,7 @@
                                        Foreground="#374151" TextWrapping="Wrap" />
                         </StackPanel>
 
-                        <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10"
-                                Background="#F7F8FA" Padding="12">
-                            <TextBlock x:Name="CalloutText" TextWrapping="Wrap" FontSize="12.5" Foreground="#4B5563">
-                                Need handwriting, math and tables at the highest accuracy?
-                                <Run Foreground="#1D4ED8">Chandra on Datalab</Run> reads them,
-                                with $5 in free credits to start.
-                            </TextBlock>
-                        </Border>
+                       
                     </StackPanel>
                 </ScrollViewer>
             </Border>

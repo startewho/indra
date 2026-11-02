@@ -1028,11 +1028,7 @@ public partial class MainWindow : Window
     private static void OpenUrl(string url)
         => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 
-    private void OnOpenGithub(object? sender, RoutedEventArgs e)
-        => OpenUrl("https://github.com/datalab-to/indra");
-
-    private void OnOpenModels(object? sender, RoutedEventArgs e)
-        => OpenUrl("https://huggingface.co/datalab-to/indra-ocr");
+    
 
     private void OnAbout(object? sender, RoutedEventArgs e)
         => new AboutWindow(_engineKind, ModelPathBox.Text).ShowDialog(this);
