@@ -7,13 +7,13 @@ all Apache-2.0:
 - pp_ocrv6_rec.onnx
 - ppocrv6_dict.txt
 - pp_doclayout_s.onnx
-- pp_lcnet_textline_ori.onnx
+
 
 Source:
 - https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx
 - https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx
 - https://huggingface.co/stefanj0/PP-DocLayout-S-ONNX
-- https://huggingface.co/monkt/paddleocr-onnx (textline orientation)
+
 
 Original project: https://github.com/PaddlePaddle/PaddleOCR (Apache-2.0).
 

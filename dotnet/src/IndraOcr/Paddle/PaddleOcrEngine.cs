@@ -9,7 +9,7 @@ namespace IndraOcr.Paddle;
 /// <summary>Locates the preinstalled PaddleOCR ONNX models (no runtime download).</summary>
 public static class PaddleModelFiles
 {
-    public static readonly string[] Required = { "pp_ocrv6_det.onnx", "pp_ocrv6_rec.onnx", "ppocrv6_dict.txt", "pp_doclayout_s.onnx", "pp_lcnet_textline_ori.onnx" };
+    public static readonly string[] Required = { "pp_ocrv6_det.onnx", "pp_ocrv6_rec.onnx", "ppocrv6_dict.txt", "pp_doclayout_s.onnx" };
 
     public static string DefaultDir()
         => Path.Combine(AppContext.BaseDirectory, "Data", "paddleocr");
@@ -38,7 +38,6 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
     private readonly InferenceSession _det;
     private readonly InferenceSession _rec;
     private readonly InferenceSession? _layout;
-    private readonly InferenceSession? _cls;
     private readonly string[] _chars;
     private readonly int _threads;
 
@@ -58,11 +57,6 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         if (File.Exists(layoutPath))
         {
             _layout = new InferenceSession(layoutPath, options);
-        }
-        string clsPath = Path.Combine(dir, "pp_lcnet_textline_ori.onnx");
-        if (File.Exists(clsPath))
-        {
-            _cls = new InferenceSession(clsPath, options);
         }
         string character = File.ReadAllText(Path.Combine(dir, "ppocrv6_dict.txt"));
         _chars = new[] { "" }.Concat(character.Replace("\r", "").Split('\n')).Append(" ").ToArray();
@@ -156,7 +150,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             Note = "order=paddle; engine=paddleocr; model=PP-OCRv6_small; layout=pp-doclayout-s",
             Markdown = markdown,
         };
-        page.Lines.AddRange(orderedLines);
+        page.Lines.AddRange(lines);
         page.Blocks.AddRange(outputBlocks);
         page.Timings["det_ms"] = detMs;
         page.Timings["rec_ms"] = recMs;
@@ -406,6 +400,39 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         return (boxes, sw.Elapsed.TotalMilliseconds);
     }
 
+    private static double PolygonScore(
+        Microsoft.ML.OnnxRuntime.Tensors.Tensor<float> map, Point2f[] quad, int width, int height)
+    {
+        int left = Math.Max(0, (int)Math.Floor(quad.Min(p => p.X)));
+        int top = Math.Max(0, (int)Math.Floor(quad.Min(p => p.Y)));
+        int right = Math.Min(width - 1, (int)Math.Ceiling(quad.Max(p => p.X)));
+        int bottom = Math.Min(height - 1, (int)Math.Ceiling(quad.Max(p => p.Y)));
+        if (right <= left || bottom <= top)
+        {
+            return 0;
+        }
+        using var mask = new Mat(bottom - top + 1, right - left + 1, MatType.CV_8UC1,
+            new Scalar(0));
+        var points = quad.Select(p => new Point(
+            (int)Math.Round(p.X) - left, (int)Math.Round(p.Y) - top)).ToArray();
+        Cv2.FillPoly(mask, new[] { points }, new Scalar(255));
+        double sum = 0;
+        int count = 0;
+        for (int y = top; y <= bottom; y++)
+        {
+            for (int x = left; x <= right; x++)
+            {
+                if (mask.At<byte>(y - top, x - left) == 0)
+                {
+                    continue;
+                }
+                sum += map[0, 0, y, x];
+                count++;
+            }
+        }
+        return count == 0 ? 0 : sum / count;
+    }
+
     private static Point2f[] OrderQuad(Point2f[] points)
     {
         var byX = points.OrderBy(p => p.X).ToArray();
@@ -459,14 +486,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             confidence = 0;
             return "";
         }
-        Mat? flipped = null;
         var crop = raw;
-        if (_cls is not null && IsUpsideDown(raw))
-        {
-            flipped = new Mat();
-            Cv2.Rotate(raw, flipped, RotateFlags.Rotate180);
-            crop = flipped;
-        }
         int h = 48;
         int w = Math.Max(1, (int)Math.Round(crop.Cols * (h / (double)crop.Rows)));
         w = Math.Min(w, 1200);
@@ -515,35 +535,7 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
             previous = best;
         }
         confidence = probs.Count == 0 ? 0 : probs.Average();
-        flipped?.Dispose();
         return text.ToString();
-    }
-
-    private bool IsUpsideDown(Mat crop)
-    {
-        if (_cls is null)
-        {
-            return false;
-        }
-        using var resized = new Mat();
-        Cv2.Resize(crop, resized, new Size(160, 80), interpolation: InterpolationFlags.Linear);
-        var input = new DenseTensor<float>(new[] { 1, 3, 80, 160 });
-        for (int y = 0; y < 80; y++)
-        {
-            for (int x = 0; x < 160; x++)
-            {
-                float v = (resized.At<byte>(y, x) / 255f - 0.5f) / 0.5f;
-                input[0, 0, y, x] = v;
-                input[0, 1, y, x] = v;
-                input[0, 2, y, x] = v;
-            }
-        }
-        using var results = _cls.Run(new[]
-        {
-            NamedOnnxValue.CreateFromTensor(_cls.InputNames[0], input),
-        });
-        var logits = results.First().AsTensor<float>();
-        return logits[0, 1] > logits[0, 0];
     }
 
     public void Dispose()
@@ -551,6 +543,5 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         _det.Dispose();
         _rec.Dispose();
         _layout?.Dispose();
-        _cls?.Dispose();
     }
 }
