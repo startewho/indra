@@ -341,7 +341,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 - `/info` 的 `version/tesseract/defaults` 与参考一致
 - 6 个 viewer 测试通过（引擎 + 真实 Kestrel HTTP）：图像/PDF、旋转页、非法 mode、坏文件、未知文档、HTTP 400
 - Tesseract 对照未实现：`--tesseract` 会提示不可用，`/info.tesseract` 为 false
-- 全量测试 **73 passed**
+- 全量测试 **75 passed**
 
 **桌面 GUI（Avalonia 12 + Semi Avalonia）**：
 
@@ -367,7 +367,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 页卡 4 个标签页等宽（96 DIP）；重新读取按钮文案为“重新读取”
 - 模型：默认 `<exe>\Data`，发布包携带 91.5 MB 模型（核心 + math），离线可用；`下载模型` 写入当前路径
 - NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 256 MB
-- 4 个 session 测试 + 2 个覆盖层命中测试；全量 **73 passed**
+- 4 个 session 测试 + 2 个覆盖层命中测试；全量 **75 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
 **Android（图片 OCR，实验版）**：
@@ -389,7 +389,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 
 **尚未覆盖（留给后续阶段）**：
 
-- PaddleOCR 可切换引擎：见 [`PADDLEOCR_ENGINE_DESIGN.md`](PADDLEOCR_ENGINE_DESIGN.md)（设计稿，尚未实施）
+- PaddleOCR 可切换引擎已实施（桌面 GUI，模型预置）：见 [`PADDLEOCR_ENGINE_DESIGN.md`](PADDLEOCR_ENGINE_DESIGN.md)
 
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
@@ -689,11 +689,13 @@ S7 已完成：
 - [x] 页框 ↔ 右侧行列表双向悬停同步高亮
 - [x] 逐页读取、4 个等宽标签页（Preview/Markdown/Lines/JSON）
 - [x] 默认模型路径为应用 `Data`；发布包携带核心 + math 模型，离线可识别
-- [x] 模型目录输入/选择/下载（含 math）；首次读取自动下载到当前路径
+- [x] 模型全部预置；桌面运行时下载已关闭（Indra `Data` + Paddle `Data/paddleocr`）
+- [x] OCR 引擎下拉：Indra (ONNX) / PaddleOCR (PP-OCRv4 ONNX)，选择持久化
+- [x] PaddleOCR 图片与 PDF 渲染页 OCR；文字层/数学/版面按能力禁用
 - [x] 来源/管线/DPI/最大页数/显示开关；真实文件与拖放打开
 - [x] 高 DPI 适配（PerMonitorV2 manifest + 按可用屏幕收敛窗口）
 - [x] 中/英切换，默认系统语言并持久化；页卡/覆盖层/统计随语言重建
 - [x] 识别中 Loading 遮罩，禁止点击与拖放
 - [x] NativeAOT 发布（`publish-desktop.ps1`），真实进程 OCR 验证通过
-- [x] 4 个 session 测试 + 2 个覆盖层测试；全量 73 passed
+- [x] 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试；全量 75 passed
 - [ ] Tesseract 对照（与 Web viewer 相同，未实现）

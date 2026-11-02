@@ -492,7 +492,7 @@ cd dotnet
 dotnet test
 ```
 
-当前测试数量：**73**。没有模型目录时会自动跳过需要模型的用例；模型查找顺序：
+当前测试数量：**75**。没有模型目录时会自动跳过需要模型的用例；模型查找顺序：
 
 1. 环境变量 `INDRA_OCR_MODEL_DIR`
 2. Python 包的 Hugging Face 缓存（`~/.cache/huggingface/hub/models--datalab-to--indra-ocr/snapshots/*`）
