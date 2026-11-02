@@ -307,11 +307,15 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
 
     private (List<Box> Boxes, double Ms) Detect(Mat gray)
     {
-        const int limit = 736;
+        const int limit = 960;
         int h = gray.Rows, w = gray.Cols;
         double scale = Math.Min(h, w) < limit
             ? limit / (double)Math.Min(h, w)
             : 1.0;
+        if (Math.Max(h, w) * scale > 4000)
+        {
+            scale = 4000.0 / Math.Max(h, w);
+        }
         int rw = Math.Max(32, (int)Math.Round(w * scale / 32) * 32);
         int rh = Math.Max(32, (int)Math.Round(h * scale / 32) * 32);
 
@@ -372,26 +376,28 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
                     samples++;
                 }
             }
-            if (samples == 0 || score / samples < 0.35)
+            if (samples == 0 || score / samples < 0.6)
             {
                 continue;
             }
-            var quad = OrderQuad(Cv2.BoxPoints(rect));
-            var center = new Point2f(
-                (float)quad.Average(p => p.X), (float)quad.Average(p => p.Y));
-            var expanded = quad.Select(p => new Point2f(
-                (float)((p.X - center.X) * 1.12 + center.X),
-                (float)((p.Y - center.Y) * 1.12 + center.Y))).ToArray();
-            for (int i = 0; i < expanded.Length; i++)
+            double area = rect.Size.Width * (double)rect.Size.Height;
+            double perimeter = 2.0 * (rect.Size.Width + rect.Size.Height);
+            double offset = perimeter > 0 ? area * 1.5 / perimeter : 0;
+            var grown = new RotatedRect(
+                rect.Center,
+                new Size2f((float)(rect.Size.Width + 2 * offset), (float)(rect.Size.Height + 2 * offset)),
+                rect.Angle);
+            var quad = OrderQuad(Cv2.BoxPoints(grown));
+            for (int i = 0; i < quad.Length; i++)
             {
-                expanded[i].X = (float)Math.Clamp(expanded[i].X / rw * w, 0, w);
-                expanded[i].Y = (float)Math.Clamp(expanded[i].Y / rh * h, 0, h);
+                quad[i].X = (float)Math.Clamp(quad[i].X / rw * w, 0, w);
+                quad[i].Y = (float)Math.Clamp(quad[i].Y / rh * h, 0, h);
             }
-            double x0 = expanded.Min(p => p.X), x1 = expanded.Max(p => p.X);
-            double y0 = expanded.Min(p => p.Y), y1 = expanded.Max(p => p.Y);
+            double x0 = quad.Min(p => p.X), x1 = quad.Max(p => p.X);
+            double y0 = quad.Min(p => p.Y), y1 = quad.Max(p => p.Y);
             if (x1 - x0 >= 3 && y1 - y0 >= 3)
             {
-                boxes.Add(new Box(x0, y0, x1, y1, expanded));
+                boxes.Add(new Box(x0, y0, x1, y1, quad));
             }
         }
         boxes.Sort((a, b) => Math.Abs(a.Y0 - b.Y0) < 10
