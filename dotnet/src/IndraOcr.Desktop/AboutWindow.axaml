@@ -1,0 +1,107 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="620" d:DesignHeight="720"
+        x:Class="IndraOcr.Desktop.AboutWindow"
+        x:CompileBindings="True"
+        Title="About"
+        Width="620" Height="720"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#FAFAFC">
+    <Window.Styles>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Foreground" Value="#1D4ED8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+    </Window.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28" Spacing="16">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Image Width="38" Height="38" Source="avares://IndraOcr.Desktop/Assets/datalab-logo.png" />
+                <StackPanel>
+                    <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" FontFamily="Consolas" FontSize="11"
+                               Foreground="#6B7280" />
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock x:Name="IntroText" FontSize="13" Foreground="#4B5563"
+                       TextWrapping="Wrap" />
+
+            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+                <StackPanel Spacing="9">
+                    <TextBlock x:Name="EngineCaption" Classes="caption" Text="OCR ENGINES" />
+                    <TextBlock x:Name="EngineText" FontSize="14" FontWeight="SemiBold" />
+                    <TextBlock x:Name="IndraText" FontSize="13" Foreground="#4B5563"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="PaddleText" FontSize="13" Foreground="#4B5563"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="RuntimeText" FontSize="13" Foreground="#4B5563"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="LicenseText" FontSize="13" Foreground="#4B5563"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+                <StackPanel Spacing="14">
+                    <TextBlock x:Name="ModelCaption" Classes="caption" Text="MODEL FILES" />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="IndraModelCaption" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock x:Name="IndraModelPathText" FontFamily="Consolas" FontSize="11.5"
+                                   Foreground="#374151" TextWrapping="Wrap" />
+                        <TextBlock x:Name="IndraModelFilesText" FontSize="12" Foreground="#6B7280"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="PaddleModelCaption" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock x:Name="PaddleModelPathText" FontFamily="Consolas" FontSize="11.5"
+                                   Foreground="#374151" TextWrapping="Wrap" />
+                        <TextBlock x:Name="PaddleModelFilesText" FontSize="12" Foreground="#6B7280"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+                <StackPanel Spacing="7">
+                    <TextBlock x:Name="LinksCaption" Classes="caption" Text="LINKS" />
+                    <Button Classes="link" Content="Indra GitHub"
+                            Tag="https://github.com/datalab-to/indra" Click="OnOpenLink" />
+                    <Button Classes="link" Content="Indra models"
+                            Tag="https://huggingface.co/datalab-to/indra-ocr" Click="OnOpenLink" />
+                    <Button Classes="link" Content="PaddleOCR GitHub"
+                            Tag="https://github.com/PaddlePaddle/PaddleOCR" Click="OnOpenLink" />
+                    <Button Classes="link" Content="PP-OCRv6 small det"
+                            Tag="https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx"
+                            Click="OnOpenLink" />
+                    <Button Classes="link" Content="PP-OCRv6 small rec"
+                            Tag="https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx"
+                            Click="OnOpenLink" />
+                    <Button Classes="link" Content="PP-DocLayout-S"
+                            Tag="https://huggingface.co/stefanj0/PP-DocLayout-S-ONNX"
+                            Click="OnOpenLink" />
+                    <Button Classes="link" Content="PaddleOCR documentation"
+                            Tag="https://www.paddleocr.ai/latest/en/version3.x/algorithm/PP-OCRv6/PP-OCRv6.html"
+                            Click="OnOpenLink" />
+                </StackPanel>
+            </Border>
+
+            <Button x:Name="CloseButton" Content="Close" HorizontalAlignment="Right"
+                    Padding="18,7" Click="OnClose" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>

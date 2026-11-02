@@ -67,6 +67,7 @@
                     </ComboBox>
                     <Button Classes="link" Content="GitHub" Click="OnOpenGithub" />
                     <Button Classes="link" Content="Models" Click="OnOpenModels" />
+                    <Button Classes="link" Content="About" Click="OnAbout" />
                     <Button Content="Try Chandra on Datalab" Background="#1D4ED8" Foreground="White"
                             CornerRadius="6" Padding="12,6" Click="OnOpenChandra" />
                 </StackPanel>

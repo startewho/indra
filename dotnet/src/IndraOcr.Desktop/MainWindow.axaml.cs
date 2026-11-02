@@ -151,6 +151,7 @@ public partial class MainWindow : Window
             return;
         }
         _engineKind = kind;
+        EnginePreference.Save(kind);
         _session?.SetEngine(kind);
         ModelPathBox.Text = OcrSession.DefaultModelDir(kind);
         _session?.SetModelDir(ModelPathBox.Text);
@@ -1032,6 +1033,9 @@ public partial class MainWindow : Window
 
     private void OnOpenModels(object? sender, RoutedEventArgs e)
         => OpenUrl("https://huggingface.co/datalab-to/indra-ocr");
+
+    private void OnAbout(object? sender, RoutedEventArgs e)
+        => new AboutWindow(_engineKind, ModelPathBox.Text).ShowDialog(this);
 
     private void OnOpenChandra(object? sender, RoutedEventArgs e)
         => OpenUrl("https://www.datalab.to/?utm_source=indra-viewer");

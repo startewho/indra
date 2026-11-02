@@ -351,15 +351,16 @@ dist\desktop\IndraOcr.Desktop.exe scan.png
 
 - **语言**：右上角 `中文 / English` 切换，默认跟随系统语言；选择会记住（`%LOCALAPPDATA%\indra-ocr\desktop-language.txt`）。切换后静态文案、页卡、覆盖层标签、统计和提示立即更新
 - **识别中**：整个窗口显示半透明遮罩 + 旋转点 Loading 动画，并禁止点击（侧栏同时禁用），完成或出错后恢复
-- **OCR 引擎**：Indra (ONNX) / PaddleOCR 可切换，默认 Indra；切换后自动重新读取当前文档。PaddleOCR 支持图片/PDF 渲染页 OCR，并用 PP-DocLayout-S 显示版面块；文字层、数学和 Indra 阅读序禁用
+- **OCR 引擎**：Indra (ONNX) / PaddleOCR 可切换，默认 Indra；切换后自动重新读取当前文档。PaddleOCR 使用 PP-OCRv6 small det + rec，并用 PP-DocLayout-S 显示版面块、按 XY-cut 计算阅读序；文字层、数学和 Indra 阅读序禁用
 - **Source**：Auto / OCR / Text layer，切换后点 “重新读取”
 - **Pipeline**：Math as LaTeX、保留页眉页脚、OCR 图片内文字；DPI（150/200/300）；最大页数
 - **Show**：Lines、Layout blocks、Block labels、Reading order，可随时开关（立即作用于所有已显示页）
+- **About（关于）**：右上角 `About` 打开对话框，列出两个引擎当前使用的模型目录、文件数/体积、运行环境、许可和模型/项目链接
 - **Model**：模型全部随应用预置，**运行时不会下载**
   - Indra：默认 `<exe>\Data`（核心 + math）
   - PaddleOCR：默认 `<exe>\Data\paddleocr`（PP-OCRv6 det/rec + PP-DocLayout-S）
   - 设置 `INDRA_OCR_MODEL_DIR` 可覆盖 Indra 路径；Paddle 路径可在输入框中选择
-  - 首次读取时如果当前路径缺模型，也会自动下载（状态栏显示进度）；把应用放在只读目录时请改用可写目录
+  - 如果当前路径缺模型文件，状态栏会提示缺失项；桌面端不会自动下载，请补全 `Data` 目录或选择其他目录
 - **RUN**：状态、每页耗时、pages/s、各阶段耗时
 - 每页卡片：
   - 页图 + 覆盖层（行框 / 版面块 / 标签 / 阅读序）

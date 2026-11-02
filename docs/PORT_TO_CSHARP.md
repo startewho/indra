@@ -354,6 +354,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 | `src/IndraOcr.Desktop/Localization.cs` | 中/英界面切换，默认系统语言，选择持久化 |
 | `src/IndraOcr.Desktop/Controls/MarkdownRenderer.cs` | 与 Web 相同的 Markdown 子集（标题/段落/列表/HTML 表格/LaTeX） |
 | `src/IndraOcr.Desktop/MainWindow.axaml(.cs)` | 仿 Web 布局：来源、管线、模型、显示开关、逐页卡片与 4 个标签页；识别时全窗遮罩并禁用输入 |
+| `src/IndraOcr.Desktop/AboutWindow.axaml(.cs)` | 关于对话框：两个引擎的模型目录/文件数/体积、运行环境、许可与模型/项目链接 |
 | `src/IndraOcr.Desktop/ViewerOptions/Program` | 启动、`--version`、可选初始文件 |
 | `publish-desktop.ps1` | 唯一的桌面发布入口：Rebuild + NativeAOT publish（规避 Avalonia 增量 XAML 漏编译） |
 
@@ -365,9 +366,12 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 识别中全窗半透明遮罩 + 旋转点动画，侧栏禁用、覆盖层拦截点击
 - 页框悬停：页图上的文本框高亮时，右侧 `行` 列表同步选中对应行；反向悬停行也会高亮页框
 - 页卡 4 个标签页等宽（96 DIP）；重新读取按钮文案为“重新读取”
-- 模型：默认 `<exe>\Data`，发布包携带 108 MB 模型（Indra 核心 + math + PaddleOCR），离线可用；`下载模型` 写入当前路径
+- OCR 引擎下拉保留 **Indra (ONNX)** 与 **PaddleOCR (PP-OCRv6 small det/rec + PP-DocLayout-S)**，选择持久化；PaddleOCR 版面块与 XY-cut 阅读序正常
+- 手写中文样图（`Snipaste_2026-10-29_16-25-47.png`）在 GUI 中识别为 8 行，中间行与阅读顺序正确
+- 右上角 **About** 打开关于对话框，显示两个引擎的当前模型目录、文件数/体积、运行环境、许可与链接
+- 模型：默认 `<exe>\Data`，发布包携带 Indra 核心 + math + PaddleOCR 模型，离线可用；桌面端不下载模型
 - NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 272 MB
-- 4 个 session 测试 + 2 个覆盖层命中测试；全量 **75 passed**
+- 4 个 session 测试 + 2 个 Paddle 测试 + 2 个覆盖层测试；全量 **75 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
 **Android（图片 OCR，实验版）**：
@@ -389,8 +393,7 @@ $env:HF_HUB_DISABLE_XET = "1"
 
 **尚未覆盖（留给后续阶段）**：
 
-- PaddleOCR 可切换引擎已实施（桌面 GUI，模型预置）：见 [`PADDLEOCR_ENGINE_DESIGN.md`](PADDLEOCR_ENGINE_DESIGN.md)
-
+- Tesseract 对照
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
 - 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
@@ -690,8 +693,9 @@ S7 已完成：
 - [x] 逐页读取、4 个等宽标签页（Preview/Markdown/Lines/JSON）
 - [x] 默认模型路径为应用 `Data`；发布包携带核心 + math 模型，离线可识别
 - [x] 模型全部预置；桌面运行时下载已关闭（Indra `Data` + Paddle `Data/paddleocr`）
-- [x] OCR 引擎下拉：Indra (ONNX) / PaddleOCR (PP-OCRv4 ONNX)，选择持久化
-- [x] PaddleOCR 图片与 PDF 渲染页 OCR；文字层/数学/版面按能力禁用
+- [x] OCR 引擎下拉：Indra (ONNX) / PaddleOCR (PP-OCRv6 small det/rec + PP-DocLayout-S)，选择持久化
+- [x] PaddleOCR 图片与 PDF 渲染页 OCR；文字层/数学/Indra 版面按能力禁用，PP-DocLayout-S 版面块与 XY-cut 阅读序可用
+- [x] 关于对话框：显示两个引擎的模型目录、文件数/体积、运行环境、许可和链接
 - [x] 来源/管线/DPI/最大页数/显示开关；真实文件与拖放打开
 - [x] 高 DPI 适配（PerMonitorV2 manifest + 按可用屏幕收敛窗口）
 - [x] 中/英切换，默认系统语言并持久化；页卡/覆盖层/统计随语言重建

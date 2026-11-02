@@ -161,11 +161,13 @@ spinning overlay covers the window and blocks input. The default model path is
 models (OpenRAIL-M, see `Data/LICENSE`), so the desktop app works offline. The
 path can be typed, chosen with a folder picker, or overridden with
 `INDRA_OCR_MODEL_DIR`; `Download` verifies the preinstalled models. The sidebar
-also switches between **Indra (ONNX)** and **PaddleOCR** (PP-OCRv6 ONNX + PP-DocLayout-S); the
-choice is remembered. PaddleOCR is image/PDF-page OCR only: PDF text layer,
-math, Indra layout blocks and reading order are disabled under it. Models are
-preinstalled: Indra in `Data`, PaddleOCR in `Data/paddleocr`; the desktop app
-does not download models at runtime. Tesseract comparison is disabled.
+also switches between **Indra (ONNX)** and **PaddleOCR** (PP-OCRv6 small det/rec
+ONNX + PP-DocLayout-S); the choice is remembered. PaddleOCR is image/PDF-page
+OCR only: PDF text layer, math, Indra layout blocks and reading order are
+disabled under it. Models are preinstalled: Indra in `Data`, PaddleOCR in
+`Data/paddleocr`; the desktop app does not download models at runtime. The
+**About** button in the top bar shows both engines' model folders, file counts
+and sizes, runtime, licences and links. Tesseract comparison is disabled.
 
 ### NativeAOT publish
 
