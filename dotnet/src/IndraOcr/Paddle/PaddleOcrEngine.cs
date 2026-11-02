@@ -91,38 +91,135 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         }
         double recMs = rec.Elapsed.TotalMilliseconds;
         var (layoutBoxes, layoutMs) = DetectLayout(gray);
-        var blocks = new List<Block>();
-        foreach (var lb in layoutBoxes)
+        var blockLines = new List<(Block Block, List<int> Lines)>();
+        var used = new bool[lines.Count];
+        foreach (var lb in layoutBoxes.OrderBy(b => (b.X1 - b.X0) * (b.Y1 - b.Y0)))
         {
-            var inside = lines.Where(line =>
+            var indices = new List<int>();
+            for (int i = 0; i < lines.Count; i++)
             {
+                if (used[i])
+                {
+                    continue;
+                }
+                var line = lines[i];
                 double cx = (line.Box[0] + line.Box[2]) / 2;
                 double cy = (line.Box[1] + line.Box[3]) / 2;
-                return cx >= lb.X0 && cx <= lb.X1 && cy >= lb.Y0 && cy <= lb.Y1;
-            }).Select(line => line.Text).Where(text => text.Length > 0).ToList();
-            blocks.Add(new Block
+                if (cx >= lb.X0 && cx <= lb.X1 && cy >= lb.Y0 && cy <= lb.Y1)
+                {
+                    used[i] = true;
+                    indices.Add(i);
+                }
+            }
+            indices.Sort((a, b) => CompareLines(lines[a], lines[b]));
+            blockLines.Add((new Block
             {
                 Label = lb.Label,
                 Bbox = new[] { (float)lb.X0, (float)lb.Y0, (float)lb.X1, (float)lb.Y1 },
-                Text = string.Join("\n", inside),
-            });
+                Text = string.Join("\n", indices.Select(i => lines[i].Text)),
+            }, indices));
         }
-        string markdown = blocks.Count > 0
-            ? string.Join("\n\n", blocks.Select(b => b.Text).Where(t => t.Length > 0))
-            : string.Join("\n", lines.Select(l => l.Text));
+        var orderedBlocks = OrderBlocks(blockLines.Select(x => x.Block).ToList(), gray.Cols, gray.Rows);
+        var orderedLines = new List<Pipeline.Line>(lines.Count);
+        var outputBlocks = new List<Block>(orderedBlocks.Count);
+        foreach (var block in orderedBlocks)
+        {
+            var pair = blockLines.First(x => ReferenceEquals(x.Block, block));
+            outputBlocks.Add(block);
+            foreach (int i in pair.Lines)
+            {
+                if (!orderedLines.Contains(lines[i]))
+                {
+                    orderedLines.Add(lines[i]);
+                }
+            }
+        }
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (!used[i])
+            {
+                orderedLines.Add(lines[i]);
+            }
+        }
+        string markdown = outputBlocks.Count > 0
+            ? string.Join("\n\n", outputBlocks.Select(b => b.Text).Where(t => t.Length > 0))
+            : string.Join("\n", orderedLines.Select(l => l.Text));
         var page = new Pipeline.Page
         {
             Source = "paddleocr",
             Note = "order=paddle; engine=paddleocr; model=PP-OCRv6_small; layout=pp-doclayout-s",
             Markdown = markdown,
         };
-        page.Lines.AddRange(lines);
-        page.Blocks.AddRange(blocks);
+        page.Lines.AddRange(orderedLines);
+        page.Blocks.AddRange(outputBlocks);
         page.Timings["det_ms"] = detMs;
         page.Timings["rec_ms"] = recMs;
         page.Timings["layout_ms"] = layoutMs;
         page.Timings["total_ms"] = total.Elapsed.TotalMilliseconds;
         return page;
+    }
+
+    private static int CompareLines(Pipeline.Line a, Pipeline.Line b)
+        => Math.Abs(a.Box[1] - b.Box[1]) < 8
+            ? a.Box[0].CompareTo(b.Box[0])
+            : a.Box[1].CompareTo(b.Box[1]);
+
+    /// <summary>XY-cut over layout blocks; recurses on the widest whitespace gap.</summary>
+    private static List<Block> OrderBlocks(List<Block> blocks, int pageWidth, int pageHeight)
+    {
+        if (blocks.Count <= 1)
+        {
+            return blocks;
+        }
+        if (TryCut(blocks, horizontal: true, out var top, out var bottom))
+        {
+            return OrderBlocks(top, pageWidth, pageHeight)
+                .Concat(OrderBlocks(bottom, pageWidth, pageHeight)).ToList();
+        }
+        if (TryCut(blocks, horizontal: false, out var left, out var right))
+        {
+            return OrderBlocks(left, pageWidth, pageHeight)
+                .Concat(OrderBlocks(right, pageWidth, pageHeight)).ToList();
+        }
+        return blocks.OrderBy(b => b.Bbox[1]).ThenBy(b => b.Bbox[0]).ToList();
+    }
+
+    private static bool TryCut(
+        IReadOnlyList<Block> blocks, bool horizontal, out List<Block> first, out List<Block> second)
+    {
+        first = new List<Block>();
+        second = new List<Block>();
+        var intervals = blocks
+            .Select(b => horizontal
+                ? (Start: b.Bbox[1], End: b.Bbox[3])
+                : (Start: b.Bbox[0], End: b.Bbox[2]))
+            .OrderBy(x => x.Start)
+            .ToList();
+        double end = intervals[0].End;
+        double bestGap = 8;
+        double cut = double.NaN;
+        for (int i = 1; i < intervals.Count; i++)
+        {
+            var interval = intervals[i];
+            if (interval.Start - end > bestGap)
+            {
+                bestGap = interval.Start - end;
+                cut = (end + interval.Start) / 2;
+            }
+            end = Math.Max(end, interval.End);
+        }
+        if (double.IsNaN(cut))
+        {
+            return false;
+        }
+        foreach (var block in blocks)
+        {
+            double center = horizontal
+                ? (block.Bbox[1] + block.Bbox[3]) / 2
+                : (block.Bbox[0] + block.Bbox[2]) / 2;
+            (center < cut ? first : second).Add(block);
+        }
+        return first.Count > 0 && second.Count > 0;
     }
 
     private readonly record struct LayoutBox(double X0, double Y0, double X1, double Y1, string Label, double Score);
