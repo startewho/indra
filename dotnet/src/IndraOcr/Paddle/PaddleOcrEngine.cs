@@ -296,7 +296,8 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         _ => "Text",
     };
 
-    private readonly record struct Box(double X0, double Y0, double X1, double Y1);
+    private readonly record struct Box(
+        double X0, double Y0, double X1, double Y1, Point2f[]? Quad = null);
 
     private (List<Box> Boxes, double Ms) Detect(Mat gray)
     {
@@ -349,36 +350,42 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         var boxes = new List<Box>();
         foreach (var contour in contours)
         {
-            var rect = Cv2.BoundingRect(contour);
-            if (rect.Width < 4 || rect.Height < 4)
+            var rect = Cv2.MinAreaRect(contour);
+            if (rect.Size.Width < 4 || rect.Size.Height < 4)
             {
                 continue;
             }
+            var bounds = Cv2.BoundingRect(contour);
             double score = 0;
             int samples = 0;
-            for (int y = rect.Top; y < rect.Bottom; y += 2)
+            for (int y = bounds.Top; y < bounds.Bottom; y += 2)
             {
-                for (int x = rect.Left; x < rect.Right; x += 2)
+                for (int x = bounds.Left; x < bounds.Right; x += 2)
                 {
                     score += map[0, 0, y, x];
                     samples++;
                 }
             }
-            if (samples == 0 || score / samples < 0.5)
+            if (samples == 0 || score / samples < 0.35)
             {
                 continue;
             }
-            // A small expansion replaces pyclipper's unclip for the first
-            // version; recognition tolerates a few pixels of padding.
-            int padX = Math.Max(1, (int)Math.Round(rect.Height * 0.12));
-            int padY = Math.Max(1, (int)Math.Round(rect.Height * 0.04));
-            double x0 = Math.Max(0, (rect.Left - padX) / (double)rw * w);
-            double y0 = Math.Max(0, (rect.Top - padY) / (double)rh * h);
-            double x1 = Math.Min(w, (rect.Right + padX) / (double)rw * w);
-            double y1 = Math.Min(h, (rect.Bottom + padY) / (double)rh * h);
+            var quad = OrderQuad(Cv2.BoxPoints(rect));
+            var center = new Point2f(
+                (float)quad.Average(p => p.X), (float)quad.Average(p => p.Y));
+            var expanded = quad.Select(p => new Point2f(
+                (float)((p.X - center.X) * 1.12 + center.X),
+                (float)((p.Y - center.Y) * 1.12 + center.Y))).ToArray();
+            for (int i = 0; i < expanded.Length; i++)
+            {
+                expanded[i].X = (float)Math.Clamp(expanded[i].X / rw * w, 0, w);
+                expanded[i].Y = (float)Math.Clamp(expanded[i].Y / rh * h, 0, h);
+            }
+            double x0 = expanded.Min(p => p.X), x1 = expanded.Max(p => p.X);
+            double y0 = expanded.Min(p => p.Y), y1 = expanded.Max(p => p.Y);
             if (x1 - x0 >= 3 && y1 - y0 >= 3)
             {
-                boxes.Add(new Box(x0, y0, x1, y1));
+                boxes.Add(new Box(x0, y0, x1, y1, expanded));
             }
         }
         boxes.Sort((a, b) => Math.Abs(a.Y0 - b.Y0) < 10
@@ -387,18 +394,59 @@ public sealed class PaddleOcrEngine : Pipeline.IOcrEngine
         return (boxes, sw.Elapsed.TotalMilliseconds);
     }
 
+    private static Point2f[] OrderQuad(Point2f[] points)
+    {
+        var byX = points.OrderBy(p => p.X).ToArray();
+        var left = byX.Take(2).OrderBy(p => p.Y).ToArray();
+        var right = byX.Skip(2).OrderBy(p => p.Y).ToArray();
+        return new[] { left[0], right[0], right[1], left[1] };
+    }
+
+    private static Mat Crop(Mat gray, Box box)
+    {
+        if (box.Quad is not { Length: 4 } quad)
+        {
+            int x0 = Math.Max(0, (int)Math.Floor(box.X0));
+            int y0 = Math.Max(0, (int)Math.Floor(box.Y0));
+            int x1 = Math.Min(gray.Cols, (int)Math.Ceiling(box.X1));
+            int y1 = Math.Min(gray.Rows, (int)Math.Ceiling(box.Y1));
+            if (x1 <= x0 || y1 <= y0)
+            {
+                return new Mat();
+            }
+            return new Mat(gray, new Rect(x0, y0, x1 - x0, y1 - y0)).Clone();
+        }
+        double width = Math.Max(Distance(quad[0], quad[1]), Distance(quad[3], quad[2]));
+        double height = Math.Max(Distance(quad[0], quad[3]), Distance(quad[1], quad[2]));
+        int w = Math.Max(1, (int)Math.Round(width));
+        int h = Math.Max(1, (int)Math.Round(height));
+        if (w < 3 || h < 3)
+        {
+            return new Mat();
+        }
+        var dst = new[]
+        {
+            new Point2f(0, 0), new Point2f(w, 0),
+            new Point2f(w, h), new Point2f(0, h),
+        };
+        using var transform = Cv2.GetPerspectiveTransform(quad, dst);
+        var crop = new Mat();
+        Cv2.WarpPerspective(gray, crop, transform, new Size(w, h),
+            InterpolationFlags.Cubic, BorderTypes.Replicate);
+        return crop;
+    }
+
+    private static double Distance(Point2f a, Point2f b)
+        => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+
     private string Recognize(Mat gray, Box box, out double confidence)
     {
-        int x0 = Math.Max(0, (int)Math.Floor(box.X0));
-        int y0 = Math.Max(0, (int)Math.Floor(box.Y0));
-        int x1 = Math.Min(gray.Cols, (int)Math.Ceiling(box.X1));
-        int y1 = Math.Min(gray.Rows, (int)Math.Ceiling(box.Y1));
-        if (x1 <= x0 || y1 <= y0)
+        using var crop = Crop(gray, box);
+        if (crop.Empty())
         {
             confidence = 0;
             return "";
         }
-        using var crop = new Mat(gray, new Rect(x0, y0, x1 - x0, y1 - y0)).Clone();
         int h = 48;
         int w = Math.Max(1, (int)Math.Round(crop.Cols * (h / (double)crop.Rows)));
         w = Math.Min(w, 1200);
