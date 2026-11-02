@@ -333,7 +333,7 @@ NativeAOT 需要：
 
 - .NET 10 SDK
 - Visual Studio Build Tools 的 MSVC C++ 工具链（`link.exe`）
-- Windows x64；输出约 256 MB（exe + 原生库 + 约 92 MB 的 `Data` 模型目录）
+- Windows x64；输出约 272 MB（exe + 原生库 + 约 108 MB 的 `Data` 模型目录）
 - 模型（v1.1.0，含数学）随 `Data` 目录发布，首次运行无需联网下载
 
 发布后也可以把一个文件作为参数直接打开：

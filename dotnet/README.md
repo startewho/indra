@@ -181,8 +181,8 @@ The script rebuilds first and then publishes with `--no-build`. Avalonia
 compiles XAML from `CoreCompile`; an incremental `dotnet publish` can skip that
 step and produce an AOT image without compiled XAML. Plain `dotnet publish` is
 therefore a managed build, not an AOT one. NativeAOT needs the MSVC C++ build
-tools (`link.exe`) and takes a few minutes; the output is about 256 MB because
-ONNX Runtime, OpenCV, PDFium, Skia and the 92 MB model folder ship alongside the
+tools (`link.exe`) and takes a few minutes; the output is about 272 MB because
+ONNX Runtime, OpenCV, PDFium, Skia and the 108 MB model folder ship alongside the
 executable. ILC reports two trim warnings from unused
 `OpenCvSharp.Mat.Cast<T>`/`Get<T>` helpers; the paths used by Indra OCR are
 AOT-safe and were verified with a real offline OCR run.

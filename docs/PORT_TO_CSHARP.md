@@ -365,8 +365,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 - 识别中全窗半透明遮罩 + 旋转点动画，侧栏禁用、覆盖层拦截点击
 - 页框悬停：页图上的文本框高亮时，右侧 `行` 列表同步选中对应行；反向悬停行也会高亮页框
 - 页卡 4 个标签页等宽（96 DIP）；重新读取按钮文案为“重新读取”
-- 模型：默认 `<exe>\Data`，发布包携带 91.5 MB 模型（核心 + math），离线可用；`下载模型` 写入当前路径
-- NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 256 MB
+- 模型：默认 `<exe>\Data`，发布包携带 108 MB 模型（Indra 核心 + math + PaddleOCR），离线可用；`下载模型` 写入当前路径
+- NativeAOT：`publish-desktop.ps1` 发布；真实进程在无 `INDRA_OCR_MODEL_DIR`、无网络依赖下完成 scan.png OCR（36 行/9 blocks），输出约 272 MB
 - 4 个 session 测试 + 2 个覆盖层命中测试；全量 **75 passed**
 - 不支持 Tesseract 对照；一次只打开一个文档
 
