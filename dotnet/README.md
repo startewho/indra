@@ -4,6 +4,8 @@ A 1:1 structural port of the Python package in this repository (`indra_ocr/`).
 The plan, stage list and parity rules live in
 [`docs/PORT_TO_CSHARP.md`](../docs/PORT_TO_CSHARP.md).
 Usage guide (Chinese): [`USAGE.md`](USAGE.md).
+PaddleOCR engine design (Chinese, not implemented yet):
+[`../docs/PADDLEOCR_ENGINE_DESIGN.md`](../docs/PADDLEOCR_ENGINE_DESIGN.md).
 
 ```
 dotnet/

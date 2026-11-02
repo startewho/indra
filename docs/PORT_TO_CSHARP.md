@@ -389,6 +389,8 @@ $env:HF_HUB_DISABLE_XET = "1"
 
 **尚未覆盖（留给后续阶段）**：
 
+- PaddleOCR 可切换引擎：见 [`PADDLEOCR_ENGINE_DESIGN.md`](PADDLEOCR_ENGINE_DESIGN.md)（设计稿，尚未实施）
+
 - `mask.onnx` 的 CenterMask 路径（模型集里没有该文件）
 - `det.onnx` 的图片通道（合成样本未触发图片区；`Picture` block 与 `![](picture-k)` 逻辑已移植，缺样本）
 - 真正的竖排页（合成页被 orient 判为 270° 而不是 VERTICAL 类；竖排分支代码已移植，缺可触发样本）
